@@ -1,37 +1,31 @@
-/*
- * print all directories, and symlinks to directories, in the CWD.
- */
-#define DEBUG
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 #include <unistd.h>
 #include "universe.h"
-#include "ls.h"
 #include "git.h"
 #include "utils.h"
 
 struct app_context {
 	logger *logger;
 	git *git;
+	char *last_name;
 };
-
-/*
- * Prints out the directory entry.
- */
-static void print_entry(struct dirent *de) {
-	printf("%s/\n", de->d_name);
-}
 
 /*
  * Visits the specified file.
  */
 static void visit(void *inst, const char *name, const char *path,
-		const char *project) {
+		const char *project)
+{
 	struct app_context *context = inst;
 	DEBUG_LOG(context->logger, "Visiting workspace: %s, %s: %s\n", name, path,
 			project);
+	/* If we have not seen this workspace before, print out its description */
+	if (context->last_name != name) {
+		printf("Workspace %s%c%s (name: %s)\n", path, path_separator(), project,
+				name);
+		context->last_name = (char *)name;
+	}
 	git_action(context->git, path, project);
 }
 
@@ -41,7 +35,8 @@ static void print_usage() {
 			"\tpull\t\tPull the repositories\n"
 			"\tcheckout\tCheck out out a branch\n"
 			"\tpush\t\tPush the repositories\n"
-			"\tclone\t\tClone the repositories\n");
+			"\tclone\t\tClone the repositories\n"
+			"\tstatus\t\tPrint out the repositories status\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -66,6 +61,7 @@ int main(int argc, char *argv[]) {
 	/* Initialise the application context */
 	context.logger = logger_create(-1, stdout);
 	context.git = git_new(context.logger);
+	context.last_name = NULL;
 
 	/* Parse the command line parameters */
 	if (git_parse_cmd_line(context.git, argc, argv)) {
@@ -85,8 +81,6 @@ int main(int argc, char *argv[]) {
 		 * in the command line
 		 */
 		universe_accept(uv, &context, visit);
-
-		ls(".", print_entry);
 
 		/* Release the claimed resources */
 		universe_destroy(uv);

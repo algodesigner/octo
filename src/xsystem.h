@@ -23,14 +23,9 @@ void char_buffer_print(struct char_buffer *);
 void char_buffer_destroy(struct char_buffer *);
 
 /*
- * Executes the specified command in a quiet or verbose mode.
- */
-int xsystem(const char *, struct char_buffer *);
-
-/*
  * Executes the specified command and stores its output (on stdout) in a quiet
  * or verbose mode.
  */
-int _xsystem(const char *, struct char_buffer *, bool);
+int xsystem(const char *, struct char_buffer *, bool);
 
 #endif /* XSYSTEM_H_ */

@@ -45,8 +45,12 @@ void char_buffer_print(struct char_buffer *obj) {
 	}
 }
 
-int _xsystem(const char *cmd, struct char_buffer *dst, bool verbose) {
+int xsystem(const char *cmd, struct char_buffer *dst, bool verbose) {
 
+	/*
+	 * Flush stdout as the command might take a while to execute leaving
+	 * the output split.
+	 */
 	fflush(stdout);
 
 	if (!dst)
@@ -74,61 +78,4 @@ int _xsystem(const char *cmd, struct char_buffer *dst, bool verbose) {
 	dst->position = prev_position;
 
 	return pclose(fp);
-}
-
-int xsystem(const char *cmd, struct char_buffer *dst) {
-	if (!dst)
-		return system(cmd);
-
-	int handle[2];
-	int prev_stdout;
-	int prev_stderr;
-	int result;
-
-	/* Save stdout and stderr handles */
-	prev_stdout = dup(STDOUT_FILENO);
-	prev_stderr = dup(STDERR_FILENO);
-
-	/* Make a pipe */
-	if (pipe(handle)) {
-		dst->position = dst->limit = 0;
-		return -1;
-	}
-
-	/* TODO Tidy up the error handling */
-
-	/* Redirect stdout to the pipe */
-	dup2(handle[1], STDOUT_FILENO);
-	close(handle[1]);
-
-	/* Redirect stderr to stdout */
-	dup2(STDOUT_FILENO, STDERR_FILENO);
-
-	putchar(' ');
-	fflush(stdout);
-
-	/* Run the command */
-	result = system(cmd);
-	fflush(stdout);
-
-	/*
-	 if (fcntl(handle[0], F_SETFL, O_NONBLOCK) < 0)
-	 exit(2);
-	 */
-
-	/* Read the combined output stream */
-	int len = dst->limit - dst->position;
-	if (len <= 1) {
-		dst->position = dst->limit = 0;
-		return -1;
-	}
-	int read_len = read(handle[0], dst->buffer + dst->position, len);
-	dst->limit = dst->position + read_len;
-	dst->position++;
-
-	/* Restore stdout and stderr */
-	dup2(prev_stdout, STDOUT_FILENO);
-	dup2(prev_stderr, STDERR_FILENO);
-
-	return result;
 }

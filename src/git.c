@@ -54,7 +54,7 @@ static const char *action_to_string(enum action action) {
 bool git_is_installed() {
 	bool result;
 	struct char_buffer *char_buffer = char_buffer_new(128);
-	result = !_xsystem("git version 2>&1", char_buffer, false);
+	result = !xsystem("git version 2>&1", char_buffer, false);
 	char_buffer_destroy(char_buffer);
 	return result;
 }
@@ -103,7 +103,11 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 	} else if (!strcmp(argv[1], "clone")) {
 		DEBUG_LOG(obj->logger, "clone command\n");
 		obj->action = CLONE;
+	} else if (!strcmp(argv[1], "status")) {
+		DEBUG_LOG(obj->logger, "status command\n");
+		obj->action = STATUS;
 	}
+
 	obj->error_message = NULL;
 	return true;
 }
@@ -134,7 +138,7 @@ static int exec(git *obj, const char *path, const char *project,
 			/* Execute the command */
 			DEBUG_LOG(obj->logger, "exec: %s\n", command);
 			char_buffer_reset(obj->char_buffer);
-			result = _xsystem(command, obj->char_buffer, false);
+			result = xsystem(command, obj->char_buffer, false);
 			DEBUG_LOG(obj->logger, "exec: result=%d\n", result);
 			DEBUG_LOG(obj->logger, "exec: cd %s\n", cwd);
 			chdir(cwd);
@@ -145,7 +149,7 @@ static int exec(git *obj, const char *path, const char *project,
 
 void print_branch_name(git *obj) {
 	char_buffer_reset(obj->char_buffer);
-	if (!_xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
+	if (!xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
 		/* Trim the LF */
 		obj->char_buffer->limit--;
 		putchar('{');
@@ -183,6 +187,11 @@ static void clone(git *obj, const char *path, const char *project) {
 	exec(obj, path, NULL, cmd, NULL);
 }
 
+static void status(git *obj, const char *path, const char *project) {
+	printf(" o Found %s%c%s ", path, path_separator(), project);
+	exec(obj, path, project, "git status 2>&1", print_branch_name);
+}
+
 void git_action(git *obj, const char *path, const char *project) {
 
 	DEBUG_LOG(obj->logger, "git_action: action='%s', path='%s', project='%s'\n",
@@ -200,6 +209,9 @@ void git_action(git *obj, const char *path, const char *project) {
 		break;
 	case CLONE:
 		clone(obj, path, project);
+		break;
+	case STATUS:
+		status(obj, path, project);
 		break;
 	default:
 		break;

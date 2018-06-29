@@ -4,8 +4,6 @@
  *  Created on: 5 Jun. 2018
  *      Author: Vlad
  */
-#define DEBUG
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>

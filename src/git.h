@@ -14,7 +14,7 @@
 typedef struct git_st git;
 
 enum action {
-	UNKNOWN = 0, PULL = 1, PUSH = 2, CHECKOUT = 3, CLONE = 4
+	UNKNOWN, PULL, PUSH, CHECKOUT, CLONE, STATUS
 };
 
 /*

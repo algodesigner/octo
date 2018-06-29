@@ -37,7 +37,8 @@ static void visit_list_item(void *inst, void *project) {
 }
 
 void workspace_accept(workspace *obj, void *inst,
-		void (*visit)(void *, const char *, const char *, const char *)) {
+		void (*visit)(void *, const char *, const char *, const char *))
+{
 	obj->inst = inst;
 	obj->visit = visit;
 	linked_hash_set_traverse(obj->projects, obj, visit_list_item);

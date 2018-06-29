@@ -32,11 +32,21 @@ static void visit(void *inst, const char *name, const char *path,
 static void print_usage() {
 	printf("Usage: octo <command> [<args>] [<option> [<parameter]]\n\n"
 			"Commands:\n"
-			"\tpull\t\tPull the repositories\n"
-			"\tcheckout\tCheck out out a branch\n"
-			"\tpush\t\tPush the repositories\n"
-			"\tclone\t\tClone the repositories\n"
-			"\tstatus\t\tPrint out the repositories status\n");
+			"    pull\tPull the repositories\n"
+			"    checkout\tCheck out out a branch\n"
+			"    push\tPush the repositories\n"
+			"    clone\tClone the repositories\n"
+			"    status\tPrint out the repositories status\n");
+}
+
+static void def_file_name(struct app_context *context, char *dst, int len) {
+	/* Get the definition file name */
+	char *homedir = get_home();
+	DEBUG_LOG(context->logger, "Home dir: %s\n", homedir);
+	snprintf(dst, len, "%s%c.octo%cworkspaces", homedir, path_separator(),
+			path_separator());
+	DEBUG_LOG(context->logger, "Definition file: %s\n", dst);
+	free(homedir);
 }
 
 int main(int argc, char *argv[]) {
@@ -66,12 +76,8 @@ int main(int argc, char *argv[]) {
 	/* Parse the command line parameters */
 	if (git_parse_cmd_line(context.git, argc, argv)) {
 
-		/* Prepare the declaration file name */
-		char *homedir = get_home();
-		DEBUG_LOG(context.logger, "Home dir: %s\n", homedir);
-		snprintf(declaration_file, MAX_PATH, "%s%c.octo%cworkspaces", homedir,
-				path_separator(), path_separator());
-		DEBUG_LOG(context.logger, "Declaration file: %s\n", declaration_file);
+		/* Get the definition file name */
+		def_file_name(&context, declaration_file, MAX_PATH);
 
 		/* Instantiate the workspace "unverse" and parse the declaration file */
 		universe *uv = universe_new(context.logger, declaration_file);
@@ -84,7 +90,6 @@ int main(int argc, char *argv[]) {
 
 		/* Release the claimed resources */
 		universe_destroy(uv);
-		free(homedir);
 		result = EXIT_SUCCESS;
 	} else {
 		printf("Error: %s\n", git_get_error_message(context.git));

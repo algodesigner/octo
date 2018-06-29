@@ -18,8 +18,7 @@ struct logger_s {
 
 const char *log_levels[] = { "WARNING", "INFO", "DEBUG" };
 
-logger *logger_create(int session_id, FILE *file)
-{
+logger *logger_create(int session_id, FILE *file) {
 	logger *obj = (logger *)malloc(sizeof(logger));
 	if (obj == NULL)
 		return NULL;
@@ -30,8 +29,7 @@ logger *logger_create(int session_id, FILE *file)
 	return obj;
 }
 
-void logger_log(logger *obj, int level, char *fmt, ...)
-{
+void logger_log(logger *obj, int level, char *fmt, ...) {
 	if (level > LOGLEVEL_MAX)
 		return;
 
@@ -40,16 +38,14 @@ void logger_log(logger *obj, int level, char *fmt, ...)
 
 	FILE *file = obj->file ? obj->file : stdout;
 	if (obj->session_id > -1) {
-		fprintf(file, "%02d/%02d/%d %02d:%02d:%02d S%d[%s] ",
-			tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900,
-			tm->tm_hour, tm->tm_min, tm->tm_sec,
-			obj->session_id, log_levels[level]);
+		fprintf(file, "%02d/%02d/%d %02d:%02d:%02d S%d[%s] ", tm->tm_mday,
+				tm->tm_mon + 1, tm->tm_year + 1900, tm->tm_hour, tm->tm_min,
+				tm->tm_sec, obj->session_id, log_levels[level]);
 	} else {
 		/* No session allocated to this logger */
-		fprintf(file, "%02d/%02d/%d %02d:%02d:%02d [%s] ",
-			tm->tm_mday, tm->tm_mon + 1, tm->tm_year + 1900,
-			tm->tm_hour, tm->tm_min, tm->tm_sec,
-			log_levels[level]);
+		fprintf(file, "%02d/%02d/%d %02d:%02d:%02d [%s] ", tm->tm_mday,
+				tm->tm_mon + 1, tm->tm_year + 1900, tm->tm_hour, tm->tm_min,
+				tm->tm_sec, log_levels[level]);
 	}
 	va_list args;
 	va_start(args, fmt);
@@ -57,7 +53,6 @@ void logger_log(logger *obj, int level, char *fmt, ...)
 	va_end(args);
 }
 
-void logger_destroy(logger *obj)
-{
+void logger_destroy(logger *obj) {
 	free(obj);
 }

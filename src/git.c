@@ -5,7 +5,6 @@
  *  Created on: 5 Jun. 2018
  *      Author: Vlad
  */
-#undef DEBUG
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +15,7 @@
 #include "git.h"
 #include "utils.h"
 #include "xsystem.h"
+#include "cmdline.h"
 #include "logger.h"
 
 #define MAX_PATH 1024
@@ -23,13 +23,17 @@
 
 #define CMD_CURR_BRANCH "git symbolic-ref --short HEAD"
 
-static const char* INVALID_ARGUMENTS = "Invalid argument(s) in command line";
-static const char* UNKNOWN_BRANCH = "Branch not specified in checkout command";
+static const char *INVALID_ARGUMENTS = "Invalid argument(s) in command line";
+static const char *UNKNOWN_BRANCH = "Branch not specified in checkout command";
+static const char *UNKNOWN_REPOSITORY =
+		"Repository not specified in the clone command";
+static const char *UNKNOWN_COMMAND = "Unknown command";
 
 struct git_st {
 	logger *logger;
 	enum action action;
 	char *branch;
+	char *repository;
 	const char *error_message;
 	struct char_buffer *char_buffer;
 };
@@ -65,6 +69,7 @@ bool git_is_installed() {
 static inline void reset(git *obj) {
 	obj->action = UNKNOWN;
 	obj->branch = NULL;
+	obj->repository = NULL;
 	obj->error_message = NULL;
 }
 
@@ -87,33 +92,36 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 	}
 
 	if (!strcmp(argv[1], "pull")) {
-		DEBUG_LOG(obj->logger, "pull command\n");
 		obj->action = PULL;
 	} else if (!strcmp(argv[1], "checkout")) {
-		if (argc < 3) {
+		if (argc < 3 || is_opt(argv[2])) {
 			obj->error_message = UNKNOWN_BRANCH;
 			return false;
 		}
-		DEBUG_LOG(obj->logger, "checkout command\n");
 		obj->action = CHECKOUT;
 		obj->branch = argv[2];
 	} else if (!strcmp(argv[1], "push")) {
-		DEBUG_LOG(obj->logger, "push command\n");
 		obj->action = PUSH;
 	} else if (!strcmp(argv[1], "clone")) {
-		DEBUG_LOG(obj->logger, "clone command\n");
+		if (argc < 3 || is_opt(argv[2])) {
+			obj->error_message = UNKNOWN_REPOSITORY;
+			return false;
+		}
 		obj->action = CLONE;
+		obj->repository = argv[2];
 	} else if (!strcmp(argv[1], "status")) {
-		DEBUG_LOG(obj->logger, "status command\n");
 		obj->action = STATUS;
+	} else {
+		obj->error_message = UNKNOWN_COMMAND;
+		return false;
 	}
-
 	obj->error_message = NULL;
 	return true;
 }
 
 static int exec(git *obj, const char *path, const char *project,
-		const char *command, void (*run)(git *))
+		const char *command, void (*run_before)(git *),
+		void (*run_after)(git *))
 {
 	int result;
 	result = -1;
@@ -131,15 +139,20 @@ static int exec(git *obj, const char *path, const char *project,
 
 		DEBUG_LOG(obj->logger, "exec: cd %s\n", dir_path);
 		if (!chdir(dir_path)) {
-			/* Run the task if provided */
-			if (run)
-				run(obj);
+			/* Run the "pre" task if provided */
+			if (run_before)
+				run_before(obj);
 
 			/* Execute the command */
 			DEBUG_LOG(obj->logger, "exec: %s\n", command);
 			char_buffer_reset(obj->char_buffer);
 			result = xsystem(command, obj->char_buffer, false);
 			DEBUG_LOG(obj->logger, "exec: result=%d\n", result);
+
+			/* Run the "post" task if provided */
+			if (run_after)
+				run_after(obj);
+
 			DEBUG_LOG(obj->logger, "exec: cd %s\n", cwd);
 			chdir(cwd);
 		}
@@ -147,6 +160,9 @@ static int exec(git *obj, const char *path, const char *project,
 	return result;
 }
 
+/*
+ * Prints out the currently checked out git branch.
+ */
 void print_branch_name(git *obj) {
 	char_buffer_reset(obj->char_buffer);
 	if (!xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
@@ -160,36 +176,33 @@ void print_branch_name(git *obj) {
 
 static void pull(git *obj, const char *path, const char *project) {
 	printf(" o Pulling %s%c%s ", path, path_separator(), project);
-	exec(obj, path, project, "git pull -p 2>&1", print_branch_name);
+	exec(obj, path, project, "git pull -p 2>&1", print_branch_name, NULL);
 }
 
 static void checkout(git *obj, const char *path, const char *project,
 		const char *branch)
 {
-	printf(" o Checking out %s%c%s {%s}\n", path, path_separator(), project,
-			branch);
+	printf(" o Checking out %s%c%s ", path, path_separator(), project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
-	exec(obj, path, project, cmd, NULL);
+	exec(obj, path, project, cmd, NULL, print_branch_name);
 }
 
 static void push(git *obj, const char *path, const char *project) {
 	printf(" o Pushing %s%c%s ", path, path_separator(), project);
-	exec(obj, path, project, "git push 2>&1", print_branch_name);
+	exec(obj, path, project, "git push 2>&1", print_branch_name, NULL);
 }
 
 static void clone(git *obj, const char *path, const char *project) {
 	printf(" o Cloning %s%c%s\n", path, path_separator(), project);
 	char cmd[MAX_PATH];
-	/* TODO Add a configurable repository! */
-	snprintf(cmd, MAX_PATH, "git clone git@echidna.algoteq.com:%s 2>&1",
-			project);
-	exec(obj, path, NULL, cmd, NULL);
+	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);
+	exec(obj, path, NULL, cmd, NULL, NULL);
 }
 
 static void status(git *obj, const char *path, const char *project) {
 	printf(" o Found %s%c%s ", path, path_separator(), project);
-	exec(obj, path, project, "git status 2>&1", print_branch_name);
+	exec(obj, path, project, "git status 2>&1", print_branch_name, NULL);
 }
 
 void git_action(git *obj, const char *path, const char *project) {

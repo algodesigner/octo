@@ -54,7 +54,8 @@ static void visit_workspace(void *inst, void *workspace) {
 }
 
 void universe_accept(universe *obj, void *inst,
-		void (*visit)(void *, const char *, const char *, const char *)) {
+		void (*visit)(void *, const char *, const char *, const char *))
+{
 	obj->visit = visit;
 	obj->inst = inst;
 	LinkedListTraverse(obj->workspaces, obj, visit_workspace);
@@ -62,8 +63,8 @@ void universe_accept(universe *obj, void *inst,
 
 /* Frees the memory allocated to the specified character sequence */
 static void destroy_string(void *inst, void *s) {
-	DEBUG_LOG(((universe *)inst)->logger, "Destroying string '%s'...\n",
-			(char *)s);
+	DEBUG_LOG(((universe * )inst)->logger, "Destroying string '%s'...\n",
+			(char * )s);
 	free(s);
 }
 
@@ -71,8 +72,8 @@ static void destroy_string(void *inst, void *s) {
  * type.
  */
 static void destroy_key_value(void *inst, char *key, void *value) {
-	DEBUG_LOG(((universe *)inst)->logger, "Destroying key '%s'...\n",
-			(char *)key);
+	DEBUG_LOG(((universe * )inst)->logger, "Destroying key '%s'...\n",
+			(char * )key);
 	free(key);
 	workspace_destroy(value);
 }
@@ -156,8 +157,9 @@ static void add_workspace(void *inst, const char *alias, const char *path) {
 
 void add_workspace_project(void *inst, const char *alias, const char *project) {
 	universe *obj = inst;
-	DEBUG_LOG(obj->logger, "universe: add_workspace_project: alias=%s, project=%s\n",
-			alias, project);
+	DEBUG_LOG(obj->logger,
+			"universe: add_workspace_project: alias=%s, project=%s\n", alias,
+			project);
 	workspace *workspace = HashMapGet(obj->workspace_by_alias, (char *)alias);
 	if (workspace) {
 		/* We need to copy the project name as it can mutate later */

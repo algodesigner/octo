@@ -29,7 +29,8 @@ void linked_hash_set_add(linked_hash_set *obj, char *s) {
 }
 
 void linked_hash_set_traverse(linked_hash_set *obj, void *state,
-		void (*handle)(void *state, void *value)) {
+		void (*handle)(void *state, void *value))
+{
 	LinkedListTraverse(obj->list, state, handle);
 }
 

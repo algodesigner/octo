@@ -7,7 +7,6 @@
  *  Created on: 7 Jun. 2018
  *      Author: Vlad
  */
-#define DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>

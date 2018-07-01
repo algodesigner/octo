@@ -17,4 +17,9 @@
  */
 bool is_opt(const char *);
 
+/*
+ * Retrieves the index of the specified command line option or -1 if not found.
+ */
+int get_opt(char *, int, char **);
+
 #endif /* CMDLINE_H_ */

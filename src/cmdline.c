@@ -14,7 +14,7 @@ bool is_opt(const char *s) {
  * Indicates if the option contained in the first argument matched the option
  * provided in the second one.
  */
-bool equal_opts(char *arg, char *o) {
+static bool equal_opts(char *arg, char *o) {
 	if (!is_opt(arg))
 		return false;
 	/*

@@ -9,6 +9,7 @@
 struct app_context {
 	logger *logger;
 	git *git;
+	char *name;
 	char *last_name;
 	int argc;
 	char **argv;
@@ -25,10 +26,14 @@ static void visit(void *inst, const char *name, const char *path,
 	struct app_context *context = inst;
 	DEBUG_LOG(context->logger, "Visiting workspace: %s, %s: %s\n", name, path,
 			project);
+
+	/* Return if the workspace name is set but not matched */
+	if (context->name && strcmp(context->name, name))
+		return;
+
 	/* If we have not seen this workspace before, print out its description */
 	if (context->last_name != name) {
-		printf("Workspace %s%c%s (name: %s)\n", path, path_separator(), project,
-				name);
+		printf("Workspace %s (name: %s)\n", path, name);
 		context->last_name = (char *)name;
 	}
 	git_action(context->git, path, project);
@@ -66,6 +71,20 @@ bool def_file_name(struct app_context *context, char *dst, int len) {
 	return true;
 }
 
+bool get_workspace_name(struct app_context *context) {
+	int arg_index = get_opt("--workspace", context->argc, context->argv);
+	if (arg_index != -1) {
+		char *src = strchr(context->argv[arg_index], '=');
+		if (!src || !*++src) {
+			context->error_message = "Invalid workspace option";
+			context->result = EXIT_FAILURE;
+			return false;
+		}
+		context->name = src;
+	}
+	return true;
+}
+
 int main(int argc, char *argv[]) {
 
 	char declaration_file[MAX_PATH];
@@ -84,6 +103,7 @@ int main(int argc, char *argv[]) {
 	/* Initialise the application context */
 	context.logger = logger_create(-1, stdout);
 	context.git = git_new(context.logger);
+	context.name = NULL;
 	context.last_name = NULL;
 	context.argc = argc;
 	context.argv = argv;
@@ -93,8 +113,9 @@ int main(int argc, char *argv[]) {
 	if (git_parse_cmd_line(context.git, argc, argv)) {
 
 		/* Get the definition file name */
-		if (def_file_name(&context, declaration_file, MAX_PATH)) {
-
+		if (def_file_name(&context, declaration_file, MAX_PATH)
+				&& get_workspace_name(&context))
+		{
 			/*
 			 * Instantiate the workspace "universe" and parse the declaration
 			 * file
@@ -110,7 +131,6 @@ int main(int argc, char *argv[]) {
 			/* Release the claimed resources */
 			universe_destroy(uv);
 			context.result = EXIT_SUCCESS;
-
 		}
 	} else {
 		context.error_message = git_get_error_message(context.git);

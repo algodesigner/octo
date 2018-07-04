@@ -175,33 +175,33 @@ void print_branch_name(git *obj) {
 }
 
 static void pull(git *obj, const char *path, const char *project) {
-	printf(" o Pulling %s%c%s ", path, path_separator(), project);
+	printf(" o Pulling %s ", project);
 	exec(obj, path, project, "git pull -p 2>&1", print_branch_name, NULL);
 }
 
 static void checkout(git *obj, const char *path, const char *project,
 		const char *branch)
 {
-	printf(" o Checking out %s%c%s ", path, path_separator(), project);
+	printf(" o Checking out %s ", project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
 	exec(obj, path, project, cmd, NULL, print_branch_name);
 }
 
 static void push(git *obj, const char *path, const char *project) {
-	printf(" o Pushing %s%c%s ", path, path_separator(), project);
+	printf(" o Pushing %s ", project);
 	exec(obj, path, project, "git push 2>&1", print_branch_name, NULL);
 }
 
 static void clone(git *obj, const char *path, const char *project) {
-	printf(" o Cloning %s%c%s\n", path, path_separator(), project);
+	printf(" o Cloning %s\n", project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);
 	exec(obj, path, NULL, cmd, NULL, NULL);
 }
 
 static void status(git *obj, const char *path, const char *project) {
-	printf(" o Found %s%c%s ", path, path_separator(), project);
+	printf(" o Found %s ", project);
 	exec(obj, path, project, "git status 2>&1", print_branch_name, NULL);
 }
 

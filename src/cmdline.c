@@ -14,7 +14,7 @@ bool is_opt(const char *s) {
  * Indicates if the option contained in the first argument matched the option
  * provided in the second one.
  */
-static bool equal_opts(char *arg, char *o) {
+bool equal_opts(char *arg, char *o) {
 	if (!is_opt(arg))
 		return false;
 	/*
@@ -28,8 +28,7 @@ static bool equal_opts(char *arg, char *o) {
 }
 
 int get_opt(char *opt, int argc, char *argv[]) {
-	int i;
-	for (i = 1; i < argc; i++) {
+	for (int i = 1; i < argc; i++) {
 		/* A really tricky piece of logic */
 		if (equal_opts(argv[i], opt))
 			return i;

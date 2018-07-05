@@ -5,16 +5,13 @@
 #include "git.h"
 #include "utils.h"
 #include "cmdline.h"
+#include "config.h"
 
 struct app_context {
+	config *config;
 	logger *logger;
 	git *git;
-	char *name;
 	char *last_name;
-	int argc;
-	char **argv;
-	int result;
-	const char *error_message;
 };
 
 /*
@@ -28,7 +25,8 @@ static void visit(void *inst, const char *name, const char *path,
 			project);
 
 	/* Return if the workspace name is set but not matched */
-	if (context->name && strcmp(context->name, name))
+	char *wname = config_get_workspace_name(context->config);
+	if (wname && strcmp(wname, name))
 		return;
 
 	/* If we have not seen this workspace before, print out its description */
@@ -49,45 +47,8 @@ static void print_usage() {
 			"    status\tPrint out the repositories status\n");
 }
 
-bool def_file_name(struct app_context *context, char *dst, int len) {
-	int arg_index = get_opt("--def", context->argc, context->argv);
-	if (arg_index != -1) {
-		char *src = strchr(context->argv[arg_index], '=');
-		if (!src || !*++src) {
-			context->error_message = "Invalid definition file option";
-			context->result = EXIT_FAILURE;
-			return false;
-		}
-		strncpy(dst, src, len);
-	} else {
-		/* Get the definition file name */
-		char *homedir = get_home();
-		DEBUG_LOG(context->logger, "Home dir: %s\n", homedir);
-		snprintf(dst, len, "%s%c.octo%cworkspaces", homedir, path_separator(),
-				path_separator());
-		DEBUG_LOG(context->logger, "Definition file: %s\n", dst);
-		free(homedir);
-	}
-	return true;
-}
-
-bool get_workspace_name(struct app_context *context) {
-	int arg_index = get_opt("--workspace", context->argc, context->argv);
-	if (arg_index != -1) {
-		char *src = strchr(context->argv[arg_index], '=');
-		if (!src || !*++src) {
-			context->error_message = "Invalid workspace option";
-			context->result = EXIT_FAILURE;
-			return false;
-		}
-		context->name = src;
-	}
-	return true;
-}
-
 int main(int argc, char *argv[]) {
 
-	char declaration_file[MAX_PATH];
 	struct app_context context;
 
 	if (!git_is_installed()) {
@@ -101,47 +62,43 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Initialise the application context */
+	context.config = config_new();
 	context.logger = logger_create(-1, stdout);
 	context.git = git_new(context.logger);
-	context.name = NULL;
 	context.last_name = NULL;
-	context.argc = argc;
-	context.argv = argv;
-	context.result = 0;
+
+	const char *err_msg = config_parse_cmd_line(context.config, argc, argv);
 
 	/* Parse the command line parameters */
-	if (git_parse_cmd_line(context.git, argc, argv)) {
+	if (!err_msg && git_parse_cmd_line(context.git, argc, argv)) {
+		/*
+		 * Instantiate the workspace "universe" and parse the declaration
+		 * file
+		 */
+		universe *uv = universe_new(context.logger,
+				config_get_def_file_name(context.config));
+		/*
+		 * Visit the individual projects and perform the actions requested
+		 * in the command line
+		 */
+		universe_accept(uv, &context, visit);
 
-		/* Get the definition file name */
-		if (def_file_name(&context, declaration_file, MAX_PATH)
-				&& get_workspace_name(&context))
-		{
-			/*
-			 * Instantiate the workspace "universe" and parse the declaration
-			 * file
-			 */
-			universe *uv = universe_new(context.logger, declaration_file);
+		/* Release the claimed resources */
+		universe_destroy(uv);
 
-			/*
-			 * Visit the individual projects and perform the actions requested
-			 * in the command line
-			 */
-			universe_accept(uv, &context, visit);
-
-			/* Release the claimed resources */
-			universe_destroy(uv);
-			context.result = EXIT_SUCCESS;
-		}
 	} else {
-		context.error_message = git_get_error_message(context.git);
-		context.result = EXIT_FAILURE;
+		err_msg = git_get_error_message(context.git);
 	}
-
-	/* Report an error if there are any failures */
-	if (context.result != EXIT_SUCCESS)
-		fprintf(stderr, "Error: %s\n", context.error_message);
 
 	git_destroy(context.git);
 	logger_destroy(context.logger);
-	return context.result;
+	config_destroy(context.config);
+
+	/* Report an error if there are any failures */
+	if (err_msg) {
+		fprintf(stderr, "Error: %s\n", err_msg);
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }

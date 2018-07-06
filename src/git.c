@@ -34,6 +34,7 @@ struct git_st {
 	enum action action;
 	char *branch;
 	char *repository;
+	bool dry_run;
 	const char *error_message;
 	struct char_buffer *char_buffer;
 };
@@ -70,6 +71,7 @@ static inline void reset(git *obj) {
 	obj->action = UNKNOWN;
 	obj->branch = NULL;
 	obj->repository = NULL;
+	obj->dry_run = false;
 	obj->error_message = NULL;
 }
 
@@ -127,7 +129,6 @@ static int exec(git *obj, const char *path, const char *project,
 	result = -1;
 	char cwd[MAX_PATH];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
-		DEBUG_LOG(obj->logger, "exec: current working dir: %s\n", cwd);
 		const char *dir_path;
 		if (project) {
 			char full_path[MAX_PATH];
@@ -137,23 +138,23 @@ static int exec(git *obj, const char *path, const char *project,
 		} else
 			dir_path = path;
 
-		DEBUG_LOG(obj->logger, "exec: cd %s\n", dir_path);
 		if (!chdir(dir_path)) {
 			/* Run the "pre" task if provided */
 			if (run_before)
 				run_before(obj);
 
-			/* Execute the command */
+			/* Execute the command unless we are in the dry run mode */
 			DEBUG_LOG(obj->logger, "exec: %s\n", command);
 			char_buffer_reset(obj->char_buffer);
-			result = xsystem(command, obj->char_buffer, false);
+			if (!obj->dry_run)
+				result = xsystem(command, obj->char_buffer, false);
+			else
+				result = 0;
 			DEBUG_LOG(obj->logger, "exec: result=%d\n", result);
 
 			/* Run the "post" task if provided */
 			if (run_after)
 				run_after(obj);
-
-			DEBUG_LOG(obj->logger, "exec: cd %s\n", cwd);
 			chdir(cwd);
 		}
 	}
@@ -202,7 +203,10 @@ static void clone(git *obj, const char *path, const char *project) {
 
 static void status(git *obj, const char *path, const char *project) {
 	printf(" o Found %s ", project);
+	bool prev_dry_run = obj->dry_run;
+	obj->dry_run = true;
 	exec(obj, path, project, "git status 2>&1", print_branch_name, NULL);
+	obj->dry_run = prev_dry_run;
 }
 
 void git_action(git *obj, const char *path, const char *project) {

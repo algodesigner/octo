@@ -7,6 +7,8 @@
 #include "cmdline.h"
 #include "config.h"
 
+#define APP_VERSION "0.1.0"
+
 struct app_context {
 	config *config;
 	logger *logger;
@@ -58,6 +60,11 @@ int main(int argc, char *argv[]) {
 
 	if (argc == 1) {
 		print_usage();
+		return EXIT_SUCCESS;
+	}
+
+	if (argc == 2 && !strcmp("version", argv[1])) {
+		puts("octo version " APP_VERSION);
 		return EXIT_SUCCESS;
 	}
 

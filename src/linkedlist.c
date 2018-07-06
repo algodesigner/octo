@@ -4,130 +4,132 @@
 
 /* Linked list entry structure */
 struct entry {
-	struct entry *prevEntry;
-	struct entry *nextEntry;
+	struct entry *prev_entry;
+	struct entry *next_entry;
 	void *value;
 };
 
 struct tagHLINKEDLIST {
-	struct entry *firstEntry;
+	struct entry *first_entry;
 	int size;
 };
 
-HLINKEDLIST LinkedListCreate() {
-	HLINKEDLIST list = (HLINKEDLIST)malloc(sizeof(struct tagHLINKEDLIST));
-	list->firstEntry = NULL;
+HLINKEDLIST linked_list_create() {
+	HLINKEDLIST list = malloc(sizeof(struct tagHLINKEDLIST));
+	list->first_entry = NULL;
 	list->size = 0;
 	return list;
 }
 
-void LinkedListAdd(HLINKEDLIST list, void *value) {
+void linked_list_add(HLINKEDLIST list, void *value) {
 	if (list == NULL)
 		return;
-	struct entry *lastEntry, *secondLastEntry;
-	lastEntry = (struct entry *)malloc(sizeof(struct entry));
-	if (list->firstEntry == NULL) {
-		list->firstEntry = lastEntry;
-		lastEntry->prevEntry = lastEntry;
+	struct entry *last_entry, *second_last_entry;
+	last_entry = malloc(sizeof(struct entry));
+	if (list->first_entry == NULL) {
+		list->first_entry = last_entry;
+		last_entry->prev_entry = last_entry;
 	} else {
-		secondLastEntry = list->firstEntry->prevEntry; /* this becomes second last element */
-		list->firstEntry->prevEntry = lastEntry;
-		secondLastEntry->nextEntry = lastEntry;
-		lastEntry->prevEntry = secondLastEntry;
+		/* this becomes second last element */
+		second_last_entry = list->first_entry->prev_entry;
+		list->first_entry->prev_entry = last_entry;
+		second_last_entry->next_entry = last_entry;
+		last_entry->prev_entry = second_last_entry;
 	}
-	lastEntry->nextEntry = NULL;
-	lastEntry->value = value;
+	last_entry->next_entry = NULL;
+	last_entry->value = value;
 	list->size++;
 	return;
 }
 
-void *LinkedListGet(HLINKEDLIST list, int index) {
+void *linked_list_get(HLINKEDLIST list, int index) {
 	if (list == NULL)
 		return NULL;
 	if (index < 0 || index >= list->size)
 		return NULL;
 	struct entry *e;
-	for (e = list->firstEntry; e; e = e->nextEntry) {
+	for (e = list->first_entry; e; e = e->next_entry) {
 		if (!index--)
 			return e->value;
 	}
 	return NULL;
 }
 
-void *LinkedListRemoveFirst(HLINKEDLIST list) {
-	void *removedValue;
-	struct entry *fe = list->firstEntry;
+void *linked_list_remove_first(HLINKEDLIST list) {
+	void *removed_value;
+	struct entry *fe = list->first_entry;
 	/* If the first and only entry is NULL, there is nothing to remove */
 	if (fe == NULL)
 		return NULL;
-	removedValue = fe->value;
-	if (fe->nextEntry == NULL) {
+	removed_value = fe->value;
+	if (fe->next_entry == NULL) {
 		free(fe);
-		list->firstEntry = NULL;
+		list->first_entry = NULL;
 	} else {
-		list->firstEntry = fe->nextEntry;
+		list->first_entry = fe->next_entry;
 		free(fe);
-		list->firstEntry->prevEntry = list->firstEntry;
+		list->first_entry->prev_entry = list->first_entry;
 	}
 	list->size--;
-	return removedValue;
+	return removed_value;
 }
 
-void *LinkedListRemoveLast(HLINKEDLIST list) {
-	struct entry *secondLastEntry;
-	struct entry *fe = list->firstEntry;
-	void *removedValue;
+void *linked_list_remove_last(HLINKEDLIST list) {
+	struct entry *second_last_entry;
+	struct entry *fe = list->first_entry;
+	void *removed_value;
 	if (fe == NULL)
 		return NULL;
-	if (fe->nextEntry == NULL) {
-		removedValue = fe->value;
+	if (fe->next_entry == NULL) {
+		removed_value = fe->value;
 		free(fe);
-		list->firstEntry = NULL;
+		list->first_entry = NULL;
 	} else {
-		removedValue = fe->prevEntry->value;
-		secondLastEntry = fe->prevEntry->prevEntry; /* this becomes last element */
-		free(fe->prevEntry);
-		fe->prevEntry = secondLastEntry;
-		secondLastEntry->nextEntry = NULL;
+		removed_value = fe->prev_entry->value;
+		/* this becomes last element */
+		second_last_entry = fe->prev_entry->prev_entry;
+		free(fe->prev_entry);
+		fe->prev_entry = second_last_entry;
+		second_last_entry->next_entry = NULL;
 	}
 	list->size--;
-	return removedValue;
+	return removed_value;
 }
 
-int LinkedListGetSize(HLINKEDLIST list) {
+int linked_list_get_size(HLINKEDLIST list) {
 	return list != NULL ? list->size : -1;
 }
 
-HLINKEDLIST LinkedListClone(HLINKEDLIST list) {
+HLINKEDLIST linked_list_clone(HLINKEDLIST list) {
 	if (list == NULL)
 		return NULL;
-	HLINKEDLIST clone = LinkedListCreate();
+	HLINKEDLIST clone = linked_list_create();
 	struct entry *e;
-	for (e = list->firstEntry; e; e = e->nextEntry)
-		LinkedListAdd(clone, e->value);
+	for (e = list->first_entry; e; e = e->next_entry)
+		linked_list_add(clone, e->value);
 	return clone;
 }
 
-void LinkedListTraverse(HLINKEDLIST list, void *state,
+void linked_list_traverse(HLINKEDLIST list, void *state,
 		void (*handle)(void *state, void *value))
 {
 	struct entry *e;
-	for (e = list->firstEntry; e; e = e->nextEntry)
+	for (e = list->first_entry; e; e = e->next_entry)
 		handle(state, e->value);
 }
 
-void LinkedListClear(HLINKEDLIST list) {
+void linked_list_clear(HLINKEDLIST list) {
 	struct entry *e, *f;
-	for (e = list->firstEntry; e;) {
+	for (e = list->first_entry; e;) {
 		f = e;
-		e = e->nextEntry;
+		e = e->next_entry;
 		free(f);
 	}
-	list->firstEntry = NULL;
+	list->first_entry = NULL;
 	list->size = 0;
 }
 
-void LinkedListDestroy(HLINKEDLIST list) {
-	LinkedListClear(list);
+void linked_list_destroy(HLINKEDLIST list) {
+	linked_list_clear(list);
 	free(list);
 }

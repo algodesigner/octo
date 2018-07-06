@@ -37,13 +37,13 @@ universe *universe_new(logger *logger, const char *file_name) {
 	universe *obj = malloc(sizeof(struct universe_st));
 	struct dconsumer *dconsumer = malloc(sizeof(struct dconsumer));
 	obj->logger = logger;
-	obj->workspaces = LinkedListCreate();
+	obj->workspaces = linked_list_create();
 	init_dconsumer(obj, dconsumer);
 	obj->dconsumer = dconsumer;
 	obj->parser = dpaser_new(logger, dconsumer);
-	obj->default_projects = LinkedListCreate();
+	obj->default_projects = linked_list_create();
 	obj->workspace_by_alias = HashMapCreate();
-	obj->alloc_strings = LinkedListCreate();
+	obj->alloc_strings = linked_list_create();
 	parse_file(obj, file_name);
 	return obj;
 }
@@ -58,7 +58,7 @@ void universe_accept(universe *obj, void *inst,
 {
 	obj->visit = visit;
 	obj->inst = inst;
-	LinkedListTraverse(obj->workspaces, obj, visit_workspace);
+	linked_list_traverse(obj->workspaces, obj, visit_workspace);
 }
 
 /* Frees the memory allocated to the specified character sequence */
@@ -79,13 +79,13 @@ static void destroy_key_value(void *inst, char *key, void *value) {
 }
 
 void universe_destroy(universe *obj) {
-	LinkedListDestroy(obj->workspaces);
+	linked_list_destroy(obj->workspaces);
 	dparser_destroy(obj->parser);
 	/* Remove the dynamically allocated project strings before destroying
 	 * the list that holds them.
 	 */
-	LinkedListTraverse(obj->default_projects, obj, destroy_string);
-	LinkedListDestroy(obj->default_projects);
+	linked_list_traverse(obj->default_projects, obj, destroy_string);
+	linked_list_destroy(obj->default_projects);
 
 	/* Remove the dynamically allocated keys and values */
 	HashMapTraverse(obj->workspace_by_alias, obj, destroy_key_value);
@@ -94,8 +94,8 @@ void universe_destroy(universe *obj) {
 	/* Remove the dynamically allocated custom project names along with
 	 * the list that contains them.
 	 */
-	LinkedListTraverse(obj->alloc_strings, obj, destroy_string);
-	LinkedListDestroy(obj->alloc_strings);
+	linked_list_traverse(obj->alloc_strings, obj, destroy_string);
+	linked_list_destroy(obj->alloc_strings);
 	free(obj->dconsumer);
 	free(obj);
 }
@@ -129,7 +129,7 @@ static void add_project(void *inst, const char *project) {
 	/* Duplicate the project character sequence as the original is mutable.
 	 * The duplicates will be destroyed immediately before the list is.
 	 */
-	LinkedListAdd(obj->default_projects, strdup(project));
+	linked_list_add(obj->default_projects, strdup(project));
 }
 
 static void add_workspace(void *inst, const char *alias, const char *path) {
@@ -147,12 +147,12 @@ static void add_workspace(void *inst, const char *alias, const char *path) {
 		/* Register the newly allocated path copy as dynamically allocated
 		 * so that it can be garbage-collected before destruction.
 		 */
-		LinkedListAdd(obj->alloc_strings, path_copy);
+		linked_list_add(obj->alloc_strings, path_copy);
 		workspace = workspace_new(alias_copy, path_copy);
-		LinkedListAdd(obj->workspaces, workspace);
+		linked_list_add(obj->workspaces, workspace);
 		HashMapPut(obj->workspace_by_alias, alias_copy, workspace);
 	}
-	LinkedListTraverse(obj->default_projects, workspace, add_to_workspace);
+	linked_list_traverse(obj->default_projects, workspace, add_to_workspace);
 }
 
 void add_workspace_project(void *inst, const char *alias, const char *project) {
@@ -165,7 +165,7 @@ void add_workspace_project(void *inst, const char *alias, const char *project) {
 		/* We need to copy the project name as it can mutate later */
 		char *project_copy = strdup(project);
 		/* Put on the list of custom projects so that we can GC it later */
-		LinkedListAdd(obj->alloc_strings, project_copy);
+		linked_list_add(obj->alloc_strings, project_copy);
 		workspace_add_dir(workspace, project_copy);
 	}
 }

@@ -7,15 +7,15 @@ NEWHANDLE(HLINKEDLIST);
 
 /** TODO Provide comments! */
 
-HLINKEDLIST LinkedListCreate(void);
-void LinkedListAdd(HLINKEDLIST, void *);
-void *LinkedListGet(HLINKEDLIST, int);
-void *LinkedListRemoveFirst(HLINKEDLIST);
-void *LinkedListRemoveLast(HLINKEDLIST);
-int LinkedListGetSize(HLINKEDLIST);
-HLINKEDLIST LinkedListClone(HLINKEDLIST);
-void LinkedListTraverse(HLINKEDLIST, void *, void (*)(void *, void *));
-void LinkedListClear(HLINKEDLIST);
-void LinkedListDestroy(HLINKEDLIST);
+HLINKEDLIST linked_list_create();
+void linked_list_add(HLINKEDLIST, void *);
+void *linked_list_get(HLINKEDLIST, int);
+void *linked_list_remove_first(HLINKEDLIST);
+void *linked_list_remove_last(HLINKEDLIST);
+int linked_list_get_size(HLINKEDLIST);
+HLINKEDLIST linked_list_clone(HLINKEDLIST);
+void linked_list_traverse(HLINKEDLIST, void *, void (*)(void *, void *));
+void linked_list_clear(HLINKEDLIST);
+void linked_list_destroy(HLINKEDLIST);
 
 #endif /* _LINKEDLIST_H_ */

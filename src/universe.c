@@ -42,7 +42,7 @@ universe *universe_new(logger *logger, const char *file_name) {
 	obj->dconsumer = dconsumer;
 	obj->parser = dpaser_new(logger, dconsumer);
 	obj->default_projects = linked_list_create();
-	obj->workspace_by_alias = HashMapCreate();
+	obj->workspace_by_alias = hash_map_create();
 	obj->alloc_strings = linked_list_create();
 	parse_file(obj, file_name);
 	return obj;
@@ -88,8 +88,8 @@ void universe_destroy(universe *obj) {
 	linked_list_destroy(obj->default_projects);
 
 	/* Remove the dynamically allocated keys and values */
-	HashMapTraverse(obj->workspace_by_alias, obj, destroy_key_value);
-	HashMapDestroy(obj->workspace_by_alias);
+	hash_map_traverse(obj->workspace_by_alias, obj, destroy_key_value);
+	hash_map_destroy(obj->workspace_by_alias);
 
 	/* Remove the dynamically allocated custom project names along with
 	 * the list that contains them.
@@ -136,7 +136,7 @@ static void add_workspace(void *inst, const char *alias, const char *path) {
 	universe *obj = inst;
 	DEBUG_LOG(obj->logger, "universe: add_workspace: '%s' -> '%s'\n", alias,
 			path);
-	workspace *workspace = HashMapGet(obj->workspace_by_alias, (char *)alias);
+	workspace *workspace = hash_map_get(obj->workspace_by_alias, (char *)alias);
 	if (!workspace) {
 		/* The alias copies used as the keys and the workspaces will be
 		 * explicitly garbage-collected when before the map is destroyed
@@ -150,7 +150,7 @@ static void add_workspace(void *inst, const char *alias, const char *path) {
 		linked_list_add(obj->alloc_strings, path_copy);
 		workspace = workspace_new(alias_copy, path_copy);
 		linked_list_add(obj->workspaces, workspace);
-		HashMapPut(obj->workspace_by_alias, alias_copy, workspace);
+		hash_map_put(obj->workspace_by_alias, alias_copy, workspace);
 	}
 	linked_list_traverse(obj->default_projects, workspace, add_to_workspace);
 }
@@ -160,7 +160,7 @@ void add_workspace_project(void *inst, const char *alias, const char *project) {
 	DEBUG_LOG(obj->logger,
 			"universe: add_workspace_project: alias=%s, project=%s\n", alias,
 			project);
-	workspace *workspace = HashMapGet(obj->workspace_by_alias, (char *)alias);
+	workspace *workspace = hash_map_get(obj->workspace_by_alias, (char *)alias);
 	if (workspace) {
 		/* We need to copy the project name as it can mutate later */
 		char *project_copy = strdup(project);

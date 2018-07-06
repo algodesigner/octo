@@ -17,7 +17,7 @@ struct map_entry {
 CLASS(HHASHMAP) {
 	struct map_entry *buckets[HASHSIZE];
 	int size;
-	float loadFactor;
+	float load_factor;
 };
 
 static unsigned hash(char *key) {
@@ -36,12 +36,12 @@ static struct map_entry *lookup(HHASHMAP map, char *key) {
 	return NULL;
 }
 
-HHASHMAP HashMapCreate() {
-	return HashMapCreateEx(HASHSIZE, LOADFACTOR);
+HHASHMAP hash_map_create() {
+	return hash_map_create_ex(HASHSIZE, LOADFACTOR);
 }
 
-HHASHMAP HashMapCreateEx(int initSize, float loadFactor) {
-	HHASHMAP map = (HHASHMAP)malloc(sizeof(struct tagHHASHMAP));
+HHASHMAP hash_map_create_ex(int initSize, float loadFactor) {
+	HHASHMAP map = malloc(sizeof(struct tagHHASHMAP));
 	if (!map)
 		return NULL;
 	int i;
@@ -51,12 +51,12 @@ HHASHMAP HashMapCreateEx(int initSize, float loadFactor) {
 	return map;
 }
 
-void *HashMapGet(HHASHMAP map, char *key) {
+void *hash_map_get(HHASHMAP map, char *key) {
 	struct map_entry *me = lookup(map, key);
 	return me != NULL ? me->value : NULL;
 }
 
-void *HashMapPut(HHASHMAP map, char *key, void *value) {
+void *hash_map_put(HHASHMAP map, char *key, void *value) {
 	struct map_entry *me;
 	unsigned h; /* Hash value */
 	if ((me = lookup(map, key)) == NULL) {
@@ -75,11 +75,12 @@ void *HashMapPut(HHASHMAP map, char *key, void *value) {
 }
 
 /* I am not sure what this method should return */
-void *HashMapRemove(HHASHMAP map, char *key) {
+void *hash_map_remove(HHASHMAP map, char *key) {
 	struct map_entry *me, *prev_me;
 	unsigned h = hash(key);
 	for (me = map->buckets[h], prev_me = NULL; me != NULL;
-			prev_me = me, me = me->next) {
+			prev_me = me, me = me->next)
+	{
 		if (strcmp(key, me->key) == 0) {
 			if (prev_me == NULL)
 				map->buckets[h] = me->next;
@@ -93,7 +94,7 @@ void *HashMapRemove(HHASHMAP map, char *key) {
 	return NULL;
 }
 
-char **HashMapGetKeys(HHASHMAP map) {
+char **hash_map_get_keys(HHASHMAP map) {
 	char **keys = malloc(sizeof(char *) * map->size + 1);
 	char **cursor = keys;
 	int i;
@@ -110,11 +111,11 @@ char **HashMapGetKeys(HHASHMAP map) {
 	return keys;
 }
 
-int HashMapGetSize(HHASHMAP map) {
+int hash_map_get_size(HHASHMAP map) {
 	return map->size;
 }
 
-void HashMapTraverse(HHASHMAP map, void *inst,
+void hash_map_traverse(HHASHMAP map, void *inst,
 		void (*visit)(void *, char *, void *))
 {
 	struct map_entry *me;
@@ -132,7 +133,7 @@ static void free_map_entry(struct map_entry *me) {
 	free(me);
 }
 
-void HashMapClear(HHASHMAP map) {
+void hash_map_clear(HHASHMAP map) {
 	struct map_entry *me;
 	int i;
 	for (i = 0; i < HASHSIZE; i++) {
@@ -144,7 +145,7 @@ void HashMapClear(HHASHMAP map) {
 	map->size = 0;
 }
 
-void HashMapDestroy(HHASHMAP map) {
-	HashMapClear(map);
+void hash_map_destroy(HHASHMAP map) {
+	hash_map_clear(map);
 	free(map);
 }

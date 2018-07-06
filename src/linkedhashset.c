@@ -16,15 +16,15 @@ struct linked_hash_set_st {
 
 linked_hash_set *linked_hash_set_new() {
 	linked_hash_set *obj = malloc(sizeof(struct linked_hash_set_st));
-	obj->map = HashMapCreate();
+	obj->map = hash_map_create();
 	obj->list = linked_list_create();
 	return obj;
 }
 
 void linked_hash_set_add(linked_hash_set *obj, char *s) {
-	if (HashMapGet(obj->map, s))
+	if (hash_map_get(obj->map, s))
 		return;
-	HashMapPut(obj->map, s, s);
+	hash_map_put(obj->map, s, s);
 	linked_list_add(obj->list, s);
 }
 
@@ -35,7 +35,7 @@ void linked_hash_set_traverse(linked_hash_set *obj, void *state,
 }
 
 int linked_hash_set_get_size(linked_hash_set *obj) {
-	return HashMapGetSize(obj->map);
+	return hash_map_get_size(obj->map);
 }
 
 void linked_hash_set_destroy(linked_hash_set *obj) {

@@ -172,6 +172,8 @@ void print_branch_name(git *obj) {
 		putchar('{');
 		char_buffer_print(obj->char_buffer);
 		puts("}");
+	} else {
+		putchar('\n');
 	}
 }
 

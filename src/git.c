@@ -42,15 +42,17 @@ struct git_st {
 #ifdef DEBUG
 static const char *action_to_string(enum action action) {
 	switch (action) {
-		case PULL:
+	case PULL:
 		return "PULL";
-		case PUSH:
+	case PUSH:
 		return "PUSH";
-		case CHECKOUT:
+	case CHECKOUT:
 		return "CHECKOUT";
-		case CLONE:
+	case CLONE:
 		return "CLONE";
-		default:
+	case STATUS:
+		return "STATUS";
+	default:
 		return "UNKNOWN";
 	}
 }

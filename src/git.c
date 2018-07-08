@@ -190,13 +190,15 @@ static int exec(git *obj, const char *path, const char *project,
  */
 static void print_branch_name(git *obj) {
 	char_buffer_reset(obj->char_buffer);
+	putchar('{');
 	if (!xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
 		/* Trim the LF */
 		obj->char_buffer->limit--;
-		putchar('{');
 		char_buffer_print(obj->char_buffer);
-		putchar('}');
+	} else {
+		printf("???");
 	}
+	putchar('}');
 }
 
 static void pull(git *obj, const char *path, const char *project) {

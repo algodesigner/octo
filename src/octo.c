@@ -63,8 +63,8 @@ static void destroy(struct app_context *context) {
  */
 static void handle_error(void *inst, int err_code, const char *err_msg) {
 	fflush(stdout);
-	destroy((struct app_context *)inst);
 	fprintf(stderr, "Error: %s\n", err_msg);
+	destroy((struct app_context *)inst);
 	exit(EXIT_FAILURE);
 }
 

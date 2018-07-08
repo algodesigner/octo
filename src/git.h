@@ -28,6 +28,11 @@ bool git_is_installed();
 git *git_new(logger *);
 
 /*
+ * Sets the error handler for this class.
+ */
+void git_set_error_handler(git *, void *, void (*)(void *, int, const char *));
+
+/*
  * Initialises this object off the specified command line.
  */
 bool git_parse_cmd_line(git *, int, char *[]);
@@ -38,7 +43,7 @@ bool git_parse_cmd_line(git *, int, char *[]);
 void git_action(git *, const char *, const char *);
 
 /*
- * Returns the currently assiigned action.
+ * Returns the currently assigned action.
  */
 enum action git_get_action(git *);
 

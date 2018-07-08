@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h>
@@ -20,6 +21,7 @@
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192
+#define TMP_BUFFER_SIZE 1024
 
 #define CMD_CURR_BRANCH "git symbolic-ref --short HEAD"
 
@@ -36,7 +38,10 @@ struct git_st {
 	char *repository;
 	bool dry_run;
 	const char *error_message;
+	void *err_handler_inst;
+	void (*handle_err)(void *, int, const char *);
 	struct char_buffer *char_buffer;
+	char *tmp_buffer;
 };
 
 #ifdef DEBUG
@@ -77,14 +82,32 @@ static inline void reset(git *obj) {
 	obj->error_message = NULL;
 }
 
+static void throw_err(git *obj, int err_code, char *fmt, ...) {
+	if (!obj->handle_err)
+		return;
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(obj->tmp_buffer, TMP_BUFFER_SIZE, fmt, args);
+	va_end(args);
+	obj->handle_err(obj->err_handler_inst, err_code, obj->tmp_buffer);
+}
+
 git *git_new(logger *logger) {
 	if (!logger)
 		return NULL;
 	git *obj = malloc(sizeof(struct git_st));
 	obj->logger = logger;
 	obj->char_buffer = char_buffer_new(CHAR_BUFFER_LEN);
+	obj->tmp_buffer = malloc(TMP_BUFFER_SIZE);
 	reset(obj);
 	return obj;
+}
+
+void git_set_error_handler(git *obj, void *err_handler_inst,
+		void (*handle_err)(void *, int, const char *))
+{
+	obj->err_handler_inst = err_handler_inst;
+	obj->handle_err = handle_err;
 }
 
 bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
@@ -127,8 +150,7 @@ static int exec(git *obj, const char *path, const char *project,
 		const char *command, void (*run_before)(git *),
 		void (*run_after)(git *))
 {
-	int result;
-	result = -1;
+	int result = -1;
 	char cwd[MAX_PATH];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
 		const char *dir_path;
@@ -166,22 +188,21 @@ static int exec(git *obj, const char *path, const char *project,
 /*
  * Prints out the currently checked out git branch.
  */
-void print_branch_name(git *obj) {
+static void print_branch_name(git *obj) {
 	char_buffer_reset(obj->char_buffer);
 	if (!xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
 		/* Trim the LF */
 		obj->char_buffer->limit--;
 		putchar('{');
 		char_buffer_print(obj->char_buffer);
-		puts("}");
-	} else {
-		putchar('\n');
+		putchar('}');
 	}
 }
 
 static void pull(git *obj, const char *path, const char *project) {
 	printf(" o Pulling %s ", project);
 	exec(obj, path, project, "git pull -p 2>&1", print_branch_name, NULL);
+	putchar('\n');
 }
 
 static void checkout(git *obj, const char *path, const char *project,
@@ -191,26 +212,34 @@ static void checkout(git *obj, const char *path, const char *project,
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
 	exec(obj, path, project, cmd, NULL, print_branch_name);
+	putchar('\n');
 }
 
 static void push(git *obj, const char *path, const char *project) {
 	printf(" o Pushing %s ", project);
 	exec(obj, path, project, "git push 2>&1", print_branch_name, NULL);
+	putchar('\n');
 }
 
 static void clone(git *obj, const char *path, const char *project) {
 	printf(" o Cloning %s\n", project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);
-	exec(obj, path, NULL, cmd, NULL, NULL);
+	int result = exec(obj, path, NULL, cmd, NULL, NULL);
+	if (result)
+		throw_err(obj, result, "Failed to clone '%s'", project);
 }
 
 static void status(git *obj, const char *path, const char *project) {
 	printf(" o Found %s ", project);
 	bool prev_dry_run = obj->dry_run;
 	obj->dry_run = true;
-	exec(obj, path, project, "git status 2>&1", print_branch_name, NULL);
+	int result = exec(obj, path, project, "git status 2>&1", print_branch_name,
+			NULL);
+	putchar('\n');
 	obj->dry_run = prev_dry_run;
+	if (result)
+		throw_err(obj, result, "Failed to retrieve status of '%s'", project);
 }
 
 void git_action(git *obj, const char *path, const char *project) {
@@ -249,5 +278,6 @@ const char *git_get_error_message(git *obj) {
 
 void git_destroy(git *obj) {
 	char_buffer_destroy(obj->char_buffer);
+	free(obj->tmp_buffer);
 	free(obj);
 }

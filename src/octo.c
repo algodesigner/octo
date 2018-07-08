@@ -49,6 +49,25 @@ static void print_usage() {
 			"    status\tPrint out the repositories status\n");
 }
 
+/*
+ * Frees up the application resources referenced by the context.
+ */
+static void destroy(struct app_context *context) {
+	git_destroy(context->git);
+	logger_destroy(context->logger);
+	config_destroy(context->config);
+}
+
+/*
+ * Handles the specified fatal application error.
+ */
+static void handle_error(void *inst, int err_code, const char *err_msg) {
+	fflush(stdout);
+	destroy((struct app_context *)inst);
+	fprintf(stderr, "Error: %s\n", err_msg);
+	exit(EXIT_FAILURE);
+}
+
 int main(int argc, char *argv[]) {
 
 	struct app_context context;
@@ -74,6 +93,9 @@ int main(int argc, char *argv[]) {
 	context.git = git_new(context.logger);
 	context.last_name = NULL;
 
+	/* Assign the error handler function */
+	git_set_error_handler(context.git, &context, handle_error);
+
 	const char *err_msg = config_parse_cmd_line(context.config, argc, argv);
 
 	/* Parse the command line parameters */
@@ -97,15 +119,13 @@ int main(int argc, char *argv[]) {
 		err_msg = git_get_error_message(context.git);
 	}
 
-	git_destroy(context.git);
-	logger_destroy(context.logger);
-	config_destroy(context.config);
-
-	/* Report an error if there are any failures */
+	/* If there is an error, pass it to the error handler */
 	if (err_msg) {
-		fprintf(stderr, "Error: %s\n", err_msg);
+		/* The error handler is expected to release the claimed resources */
+		handle_error(&context, EXIT_FAILURE, err_msg);
 		return EXIT_FAILURE;
 	}
 
+	destroy(&context);
 	return EXIT_SUCCESS;
 }

@@ -7,7 +7,7 @@
 #include "cmdline.h"
 #include "config.h"
 
-#define APP_VERSION "0.1.0"
+#define APP_VERSION "0.1.1"
 
 struct app_context {
 	config *config;

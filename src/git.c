@@ -23,7 +23,7 @@
 #define CHAR_BUFFER_LEN 8192
 #define TMP_BUFFER_SIZE 1024
 
-#define CMD_CURR_BRANCH "git symbolic-ref --short HEAD"
+#define CMD_CURR_BRANCH "git rev-parse --abbrev-ref HEAD"
 #define CMD_STATUS "git status --porcelain"
 
 static const char *INVALID_ARGUMENTS = "Invalid argument(s) in command line";

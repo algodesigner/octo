@@ -190,12 +190,13 @@ static int exec(git *obj, const char *path, const char *project,
  * Prints out the currently checked out git branch.
  */
 static void print_branch_name(git *obj) {
-	char_buffer_reset(obj->char_buffer);
+	struct char_buffer *buff = obj->char_buffer;
+	char_buffer_reset(buff);
 	putchar('{');
-	if (!xsystem(CMD_CURR_BRANCH " 2>&1", obj->char_buffer, false)) {
+	if (!xsystem(CMD_CURR_BRANCH " 2>&1", buff, false)) {
 		/* Trim the LF */
-		obj->char_buffer->limit--;
-		char_buffer_print(obj->char_buffer);
+		buff->limit--;
+		char_buffer_print(buff);
 	} else {
 		printf("???");
 	}
@@ -208,10 +209,10 @@ static void print_branch_name(git *obj) {
  */
 static void print_branch_name_chg(git *obj) {
 	print_branch_name(obj);
-	char_buffer_reset(obj->char_buffer);
-	int result = xsystem(CMD_STATUS " 2>&1", obj->char_buffer, false);
-	int len = obj->char_buffer->limit - obj->char_buffer->position;
-	if (!result && len > 0)
+	struct char_buffer *buff = obj->char_buffer;
+	char_buffer_reset(buff);
+	int result = xsystem(CMD_STATUS " 2>&1", buff, false);
+	if (!result && buff->limit - buff->position > 0)
 		printf(" Found changes!");
 }
 

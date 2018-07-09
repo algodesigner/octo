@@ -24,6 +24,7 @@
 #define TMP_BUFFER_SIZE 1024
 
 #define CMD_CURR_BRANCH "git symbolic-ref --short HEAD"
+#define CMD_STATUS "git status --porcelain"
 
 static const char *INVALID_ARGUMENTS = "Invalid argument(s) in command line";
 static const char *UNKNOWN_BRANCH = "Branch not specified in checkout command";
@@ -201,9 +202,22 @@ static void print_branch_name(git *obj) {
 	putchar('}');
 }
 
+/*
+ * Prints the currently checked out branch name and report changes to
+ * the branch if any.
+ */
+static void print_branch_name_chg(git *obj) {
+	print_branch_name(obj);
+	char_buffer_reset(obj->char_buffer);
+	int result = xsystem(CMD_STATUS " 2>&1", obj->char_buffer, false);
+	int len = obj->char_buffer->limit - obj->char_buffer->position;
+	if (!result && len > 0)
+		printf(" Found changes!");
+}
+
 static void pull(git *obj, const char *path, const char *project) {
 	printf(" o Pulling %s ", project);
-	exec(obj, path, project, "git pull -p 2>&1", print_branch_name, NULL);
+	exec(obj, path, project, "git pull -p 2>&1", print_branch_name_chg, NULL);
 	putchar('\n');
 }
 

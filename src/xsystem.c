@@ -60,6 +60,7 @@ int xsystem(const char *cmd, struct char_buffer *dst, bool verbose) {
 	if (!fp) {
 		fprintf(stderr, "Error popen with %s\n", cmd);
 		dst->position = dst->limit = 0;
+		return 1;
 	}
 
 	int ch;

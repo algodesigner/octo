@@ -10,6 +10,7 @@
 
 #include "stdbool.h"
 #include "logger.h"
+#include "config.h"
 
 typedef struct git_st git;
 
@@ -25,7 +26,7 @@ bool git_is_installed();
 /*
  * Constructs this class.
  */
-git *git_new(logger *);
+git *git_new(logger *, config *);
 
 /*
  * Sets the error handler for this class.

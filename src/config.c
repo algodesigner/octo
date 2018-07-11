@@ -24,7 +24,7 @@ struct config_st {
 static void reset(config *obj) {
 	obj->opt_limit = 0;
 	obj->workspace_name = obj->def_file_name = NULL;
-	obj->verbose = true;
+	obj->verbose = false;
 }
 
 config *config_new() {

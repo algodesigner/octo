@@ -7,7 +7,7 @@
 #include "cmdline.h"
 #include "config.h"
 
-#define APP_VERSION "0.1.1"
+#define APP_VERSION "0.1.2"
 
 struct app_context {
 	config *config;
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 	/* Initialise the application context */
 	context.config = config_new();
 	context.logger = logger_create(-1, stdout);
-	context.git = git_new(context.logger);
+	context.git = git_new(context.logger, context.config);
 	context.last_name = NULL;
 
 	/* Assign the error handler function */

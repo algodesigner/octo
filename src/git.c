@@ -34,6 +34,7 @@ static const char *UNKNOWN_COMMAND = "Unknown command";
 
 struct git_st {
 	logger *logger;
+	config *config;
 	enum action action;
 	char *branch;
 	char *repository;
@@ -93,11 +94,12 @@ static void throw_err(git *obj, int err_code, char *fmt, ...) {
 	obj->handle_err(obj->err_handler_inst, err_code, obj->tmp_buffer);
 }
 
-git *git_new(logger *logger) {
-	if (!logger)
+git *git_new(logger *logger, config *config) {
+	if (!logger || !config)
 		return NULL;
 	git *obj = malloc(sizeof(struct git_st));
 	obj->logger = logger;
+	obj->config = config;
 	obj->char_buffer = char_buffer_new(CHAR_BUFFER_LEN);
 	obj->tmp_buffer = malloc(TMP_BUFFER_SIZE);
 	reset(obj);
@@ -168,11 +170,14 @@ static int exec(git *obj, const char *path, const char *project,
 			if (run_before)
 				run_before(obj);
 
-			/* Execute the command unless we are in the dry run mode */
+			/* Execute the command unless we are in the dry run or verbose
+			 * mode
+			 */
 			DEBUG_LOG(obj->logger, "exec: %s\n", command);
+			bool verbose = config_is_verbose(obj->config);
 			char_buffer_reset(obj->char_buffer);
-			if (!obj->dry_run)
-				result = xsystem(command, obj->char_buffer, false);
+			if (!obj->dry_run || verbose)
+				result = xsystem(command, obj->char_buffer, verbose);
 			else
 				result = 0;
 			DEBUG_LOG(obj->logger, "exec: result=%d\n", result);
@@ -214,10 +219,16 @@ static void print_branch_name_chg(git *obj) {
 	int result = xsystem(CMD_STATUS " 2>&1", buff, false);
 	if (!result && buff->limit - buff->position > 0)
 		printf(" Found changes!");
+	if (config_is_verbose(obj->config))
+		putchar('\n');
+}
+
+static void print_action(git *obj, const char *action, const char *project) {
+	printf(" o %s %s ", action, project);
 }
 
 static void pull(git *obj, const char *path, const char *project) {
-	printf(" o Pulling %s ", project);
+	print_action(obj, "Pulling", project);
 	exec(obj, path, project, "git pull -p 2>&1", print_branch_name_chg, NULL);
 	putchar('\n');
 }
@@ -225,21 +236,24 @@ static void pull(git *obj, const char *path, const char *project) {
 static void checkout(git *obj, const char *path, const char *project,
 		const char *branch)
 {
-	printf(" o Checking out %s ", project);
+	print_action(obj, "Checking out", project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
-	exec(obj, path, project, cmd, NULL, print_branch_name);
+	exec(obj, path, project, cmd, NULL, print_branch_name_chg);
 	putchar('\n');
 }
 
 static void push(git *obj, const char *path, const char *project) {
-	printf(" o Pushing %s ", project);
-	exec(obj, path, project, "git push 2>&1", print_branch_name, NULL);
+	print_action(obj, "Pushing", project);
+	exec(obj, path, project, "git push 2>&1", print_branch_name_chg, NULL);
 	putchar('\n');
 }
 
 static void clone(git *obj, const char *path, const char *project) {
-	printf(" o Cloning %s\n", project);
+	print_action(obj, "Cloning", project);
+	if (config_is_verbose(obj->config))
+		putchar('\n');
+
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);
 	int result = exec(obj, path, NULL, cmd, NULL, NULL);
@@ -248,11 +262,11 @@ static void clone(git *obj, const char *path, const char *project) {
 }
 
 static void status(git *obj, const char *path, const char *project) {
-	printf(" o Found %s ", project);
+	print_action(obj, "Found", project);
 	bool prev_dry_run = obj->dry_run;
 	obj->dry_run = true;
-	int result = exec(obj, path, project, "git status 2>&1", print_branch_name,
-			NULL);
+	int result = exec(obj, path, project, "git status 2>&1",
+			print_branch_name_chg, NULL);
 	putchar('\n');
 	obj->dry_run = prev_dry_run;
 	if (result)

@@ -18,11 +18,13 @@ struct config_st {
 	int opt_limit;
 	char *workspace_name;
 	char *def_file_name;
+	bool verbose;
 };
 
 static void reset(config *obj) {
 	obj->opt_limit = 0;
 	obj->workspace_name = obj->def_file_name = NULL;
+	obj->verbose = true;
 }
 
 config *config_new() {
@@ -63,6 +65,9 @@ char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 		} else if (equal_opts(argv[i], "--def")) {
 			err_msg = parse_def_file_name(obj, argv[i]);
 			mark_opt_limit(obj, i);
+		} else if (!strcmp(argv[i], "--verbose")) {
+			obj->verbose = true;
+			mark_opt_limit(obj, i);
 		}
 		if (err_msg)
 			return err_msg;
@@ -91,6 +96,10 @@ char *config_get_workspace_name(config *obj) {
 
 char *config_get_def_file_name(config *obj) {
 	return obj->def_file_name;
+}
+
+bool config_is_verbose(config *obj) {
+	return obj->verbose;
 }
 
 void config_destroy(config *obj) {

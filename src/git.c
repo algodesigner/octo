@@ -114,38 +114,45 @@ void git_set_error_handler(git *obj, void *err_handler_inst,
 }
 
 bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
-
 	reset(obj);
-	if (argc <= 1) {
+	int i = config_get_opt_limit(obj->config);
+	if (i >= argc) {
 		obj->error_message = INVALID_ARGUMENTS;
 		return false;
 	}
 
-	if (!strcmp(argv[1], "pull")) {
+	if (!strcmp(argv[i], "pull")) {
 		obj->action = PULL;
-	} else if (!strcmp(argv[1], "checkout")) {
-		if (argc < 3 || is_opt(argv[2])) {
+		i++;
+	} else if (!strcmp(argv[i], "checkout")) {
+		if (++i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_BRANCH;
 			return false;
 		}
 		obj->action = CHECKOUT;
-		obj->branch = argv[2];
-	} else if (!strcmp(argv[1], "push")) {
+		obj->branch = argv[i++];
+	} else if (!strcmp(argv[i], "push")) {
 		obj->action = PUSH;
-	} else if (!strcmp(argv[1], "clone")) {
-		if (argc < 3 || is_opt(argv[2])) {
+		i++;
+	} else if (!strcmp(argv[i], "clone")) {
+		if (++i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_REPOSITORY;
 			return false;
 		}
 		obj->action = CLONE;
-		obj->repository = argv[2];
-	} else if (!strcmp(argv[1], "status")) {
+		obj->repository = argv[i++];
+	} else if (!strcmp(argv[i], "status")) {
 		obj->action = STATUS;
+		i++;
 	} else {
 		obj->error_message = UNKNOWN_COMMAND;
 		return false;
 	}
 	obj->error_message = NULL;
+	if (i < argc) {
+		obj->error_message = INVALID_ARGUMENTS;
+		return false;
+	}
 	return true;
 }
 
@@ -224,7 +231,7 @@ static void print_branch_name_chg(git *obj) {
 }
 
 static void print_action(git *obj, const char *action, const char *project) {
-	printf(" o %s %s ", action, project);
+	printf(" · %s %s ", action, project);
 }
 
 static void pull(git *obj, const char *path, const char *project) {

@@ -7,7 +7,7 @@
 #include "cmdline.h"
 #include "config.h"
 
-#define APP_VERSION "0.1.2"
+#define APP_VERSION "0.1.2a"
 
 struct app_context {
 	config *config;
@@ -40,7 +40,8 @@ static void visit(void *inst, const char *name, const char *path,
 }
 
 static void print_usage() {
-	printf("Usage: octo <command> [<args>] [<option> [<parameter]]\n\n"
+	printf("Usage: octo [--def=<filename>] [--workspace=<name>] [--verbose]\n"
+			"            command [<args>]\n"
 			"Commands:\n"
 			"    pull\tPull the repositories\n"
 			"    checkout\tCheck out out a branch\n"

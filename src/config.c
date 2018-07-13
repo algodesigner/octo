@@ -22,7 +22,7 @@ struct config_st {
 };
 
 static void reset(config *obj) {
-	obj->opt_limit = 0;
+	obj->opt_limit = 1;
 	obj->workspace_name = obj->def_file_name = NULL;
 	obj->verbose = false;
 }
@@ -51,13 +51,12 @@ static char *parse_def_file_name(config *obj, char *arg) {
 
 __attribute__((always_inline))
 static inline void mark_opt_limit(config *obj, int index) {
-	if (!obj->opt_limit)
-		obj->opt_limit = index;
+	obj->opt_limit = index + 1;
 }
 
 char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 	reset(obj);
-	for (int i = 0; i < argc; i++) {
+	for (int i = 1; i < argc && is_opt(argv[i]); i++) {
 		char *err_msg = NULL;
 		if (equal_opts(argv[i], "--workspace")) {
 			err_msg = parse_workspace_name(obj, argv[i]);

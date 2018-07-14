@@ -113,7 +113,7 @@ static void parse_file(universe *obj, const char *file_name) {
 	int c;
 	FILE *infile = fopen(file_name, "r");
 	if (!infile) {
-		throw_err(obj->err_publisher, 0, "File not found: %s\n", file_name);
+		throw_err(obj->err_publisher, 0, "File not found: %s", file_name);
 		return;
 	}
 	/* Process the file */

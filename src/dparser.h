@@ -16,7 +16,7 @@
 typedef struct dparser_st dparser;
 
 dparser *dpaser_new(logger *, const struct dconsumer *);
-void dparser_proc_char(dparser *, int);
+const char *dparser_proc_char(dparser *, int);
 void dparser_destroy(dparser *);
 
 #endif /* DPARSER_H_ */

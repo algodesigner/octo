@@ -61,6 +61,7 @@ struct dparser_st {
 	struct token token;
 	struct token token2;
 	const struct dconsumer *dconsumer;
+	const char *err_msg;
 };
 
 dparser *dpaser_new(logger *logger, const struct dconsumer *dconsumer) {
@@ -71,6 +72,7 @@ dparser *dpaser_new(logger *logger, const struct dconsumer *dconsumer) {
 	obj->parsing_state = IDLE;
 	obj->mode = CONTROL;
 	obj->dconsumer = dconsumer;
+	obj->err_msg = NULL;
 	return obj;
 }
 
@@ -147,7 +149,7 @@ static void finalise_token(dparser *obj) {
 	DEBUG_LOG(obj->logger, "Token: %s\n", obj->token.buffer);
 }
 
-void dparser_proc_char(dparser *obj, int c) {
+const char *dparser_proc_char(dparser *obj, int c) {
 	switch (c) {
 	case ' ':
 	case '\t':
@@ -204,6 +206,7 @@ void dparser_proc_char(dparser *obj, int c) {
 		}
 		break;
 	}
+	return NULL;
 }
 
 void dparser_destroy(dparser *obj) {

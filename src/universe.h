@@ -12,7 +12,8 @@
 
 typedef struct universe_st universe;
 
-universe *universe_new(logger *, const char *);
+universe *universe_new(logger *, const char *, void *,
+		void (*)(void *, int, const char *));
 void universe_accept(universe *, void *,
 		void (*)(void *, const char *, const char *, const char *));
 void universe_destroy(universe *);

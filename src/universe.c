@@ -15,6 +15,7 @@
 #include "hashmap.h"
 #include "utils.h"
 #include "logger.h"
+#include "errpublisher.h"
 
 struct universe_st {
 	logger *logger;
@@ -26,12 +27,15 @@ struct universe_st {
 	HLINKEDLIST alloc_strings;
 	void (*visit)(void *, const char *, const char *, const char *);
 	void *inst;
+	err_publisher *err_publisher;
 };
 
 static void parse_file(universe *, const char *);
 static void init_dconsumer(universe *, struct dconsumer *);
 
-universe *universe_new(logger *logger, const char *file_name) {
+universe *universe_new(logger *logger, const char *file_name,
+		void *err_handler_inst, void (*handle_err)(void *, int, const char *))
+{
 	if (!logger)
 		return NULL;
 	universe *obj = malloc(sizeof(struct universe_st));
@@ -44,6 +48,7 @@ universe *universe_new(logger *logger, const char *file_name) {
 	obj->default_projects = linked_list_create();
 	obj->workspace_by_alias = hash_map_create();
 	obj->alloc_strings = linked_list_create();
+	obj->err_publisher = err_publisher_new(err_handler_inst, handle_err);
 	parse_file(obj, file_name);
 	return obj;
 }
@@ -79,6 +84,7 @@ static void destroy_key_value(void *inst, char *key, void *value) {
 }
 
 void universe_destroy(universe *obj) {
+	err_publisher_destroy(obj->err_publisher);
 	linked_list_destroy(obj->workspaces);
 	dparser_destroy(obj->parser);
 	/* Remove the dynamically allocated project strings before destroying
@@ -107,13 +113,16 @@ static void parse_file(universe *obj, const char *file_name) {
 	int c;
 	FILE *infile = fopen(file_name, "r");
 	if (!infile) {
-		printf("File not found: %s\n", file_name);
+		throw_err(obj->err_publisher, 0, "File not found: %s\n", file_name);
 		return;
 	}
 	/* Process the file */
-	while ((c = fgetc(infile)) != EOF)
-		dparser_proc_char(obj->parser, c);
+	register const char *err_msg = NULL;
+	while ((c = fgetc(infile)) != EOF && !err_msg)
+		err_msg = dparser_proc_char(obj->parser, c);
 	fclose(infile);
+	if (err_msg)
+		throw_err(obj->err_publisher, 0, err_msg);
 }
 
 /**

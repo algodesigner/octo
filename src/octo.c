@@ -106,7 +106,8 @@ int main(int argc, char *argv[]) {
 		 * file
 		 */
 		universe *uv = universe_new(context.logger,
-				config_get_def_file_name(context.config));
+				config_get_def_file_name(context.config), &context,
+				handle_error);
 		/*
 		 * Visit the individual projects and perform the actions requested
 		 * in the command line

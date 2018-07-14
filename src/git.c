@@ -231,7 +231,7 @@ static void print_branch_name_chg(git *obj) {
 }
 
 static void print_action(git *obj, const char *action, const char *project) {
-	printf(" Â· %s %s ", action, project);
+	printf(" · %s %s ", action, project);
 }
 
 static void pull(git *obj, const char *path, const char *project) {

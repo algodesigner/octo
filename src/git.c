@@ -125,29 +125,33 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 		return false;
 	}
 
-	if (!strcmp(argv[i++], "pull")) {
+	if (!strcmp(argv[i], "pull")) {
 		obj->action = PULL;
-	} else if (!strcmp(argv[i++], "checkout")) {
-		if (i >= argc || is_opt(argv[i])) {
+		i++;
+	} else if (!strcmp(argv[i], "checkout")) {
+		if (++i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_BRANCH;
 			return false;
 		}
 		obj->action = CHECKOUT;
 		obj->branch = argv[i++];
-	} else if (!strcmp(argv[i++], "push")) {
+	} else if (!strcmp(argv[i], "push")) {
 		obj->action = PUSH;
-	} else if (!strcmp(argv[i++], "clone")) {
-		if (i >= argc || is_opt(argv[i])) {
+		i++;
+	} else if (!strcmp(argv[i], "clone")) {
+		if (++i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_REPOSITORY;
 			return false;
 		}
 		obj->action = CLONE;
 		obj->repository = argv[i++];
-	} else if (!strcmp(argv[i++], "status")) {
+	} else if (!strcmp(argv[i], "status")) {
 		obj->action = STATUS;
-	} else if (!strcmp(argv[i++], "list")) {
+		i++;
+	} else if (!strcmp(argv[i], "list")) {
 		obj->action = LIST;
 		obj->silent = true;
+		i++;
 	} else {
 		obj->error_message = UNKNOWN_COMMAND;
 		return false;

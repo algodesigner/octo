@@ -44,6 +44,7 @@ struct git_st {
 	void (*handle_err)(void *, int, const char *);
 	struct char_buffer *char_buffer;
 	char *tmp_buffer;
+	bool silent;
 };
 
 #ifdef DEBUG
@@ -59,6 +60,8 @@ static const char *action_to_string(enum action action) {
 		return "CLONE";
 	case STATUS:
 		return "STATUS";
+	case LIST:
+		return "LIST";
 	default:
 		return "UNKNOWN";
 	}
@@ -82,6 +85,7 @@ static inline void reset(git *obj) {
 	obj->repository = NULL;
 	obj->dry_run = false;
 	obj->error_message = NULL;
+	obj->silent = false;
 }
 
 static void throw_err(git *obj, int err_code, char *fmt, ...) {
@@ -121,29 +125,29 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 		return false;
 	}
 
-	if (!strcmp(argv[i], "pull")) {
+	if (!strcmp(argv[i++], "pull")) {
 		obj->action = PULL;
-		i++;
-	} else if (!strcmp(argv[i], "checkout")) {
-		if (++i >= argc || is_opt(argv[i])) {
+	} else if (!strcmp(argv[i++], "checkout")) {
+		if (i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_BRANCH;
 			return false;
 		}
 		obj->action = CHECKOUT;
 		obj->branch = argv[i++];
-	} else if (!strcmp(argv[i], "push")) {
+	} else if (!strcmp(argv[i++], "push")) {
 		obj->action = PUSH;
-		i++;
-	} else if (!strcmp(argv[i], "clone")) {
-		if (++i >= argc || is_opt(argv[i])) {
+	} else if (!strcmp(argv[i++], "clone")) {
+		if (i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_REPOSITORY;
 			return false;
 		}
 		obj->action = CLONE;
 		obj->repository = argv[i++];
-	} else if (!strcmp(argv[i], "status")) {
+	} else if (!strcmp(argv[i++], "status")) {
 		obj->action = STATUS;
-		i++;
+	} else if (!strcmp(argv[i++], "list")) {
+		obj->action = LIST;
+		obj->silent = true;
 	} else {
 		obj->error_message = UNKNOWN_COMMAND;
 		return false;
@@ -280,6 +284,10 @@ static void status(git *obj, const char *path, const char *project) {
 		throw_err(obj, result, "Failed to retrieve status of '%s'", project);
 }
 
+static void list(git *obj, const char *path, const char *project) {
+	printf("%s%c%s\n", path, path_separator(), project);
+}
+
 void git_action(git *obj, const char *path, const char *project) {
 
 	DEBUG_LOG(obj->logger, "git_action: action='%s', path='%s', project='%s'\n",
@@ -301,6 +309,9 @@ void git_action(git *obj, const char *path, const char *project) {
 	case STATUS:
 		status(obj, path, project);
 		break;
+	case LIST:
+		list(obj, path, project);
+		break;
 	default:
 		break;
 	}
@@ -312,6 +323,10 @@ enum action git_get_action(git *obj) {
 
 const char *git_get_error_message(git *obj) {
 	return obj->error_message;
+}
+
+bool git_is_silent(git *obj) {
+	return obj->silent;
 }
 
 void git_destroy(git *obj) {

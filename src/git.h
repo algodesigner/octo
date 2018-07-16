@@ -15,7 +15,7 @@
 typedef struct git_st git;
 
 enum action {
-	UNKNOWN, PULL, PUSH, CHECKOUT, CLONE, STATUS
+	UNKNOWN, PULL, PUSH, CHECKOUT, CLONE, STATUS, LIST
 };
 
 /*
@@ -52,6 +52,12 @@ enum action git_get_action(git *);
  * Returns the last error message or NULL if the last operation was successful.
  */
 const char *git_get_error_message(git *);
+
+/*
+ * Indicates if the application <u>outside of</u> git module is expected
+ * top operate in silent mode.
+ */
+bool git_is_silent(git *);
 
 /*
  * Destructs the specified instance of git controller.

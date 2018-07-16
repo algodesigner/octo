@@ -32,7 +32,7 @@ static void visit(void *inst, const char *name, const char *path,
 		return;
 
 	/* If we have not seen this workspace before, print out its description */
-	if (context->last_name != name) {
+	if (!git_is_silent(context->git) && context->last_name != name) {
 		printf("Workspace %s (name: %s)\n", path, name);
 		context->last_name = (char *)name;
 	}
@@ -47,7 +47,8 @@ static void print_usage() {
 			"    checkout\tCheck out out a branch\n"
 			"    push\tPush the repositories\n"
 			"    clone\tClone the repositories\n"
-			"    status\tPrint out the repositories status\n");
+			"    status\tPrint out the repositories status\n"
+			"    list\tList the repository paths\n");
 }
 
 /*

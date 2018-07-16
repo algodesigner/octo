@@ -17,11 +17,11 @@
 #include "utils.h"
 #include "xsystem.h"
 #include "cmdline.h"
+#include "errpublisher.h"
 #include "logger.h"
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192
-#define TMP_BUFFER_SIZE 1024
 
 #define CMD_CURR_BRANCH "git rev-parse --abbrev-ref HEAD"
 #define CMD_STATUS "git status --porcelain"
@@ -40,10 +40,8 @@ struct git_st {
 	char *repository;
 	bool dry_run;
 	const char *error_message;
-	void *err_handler_inst;
-	void (*handle_err)(void *, int, const char *);
 	struct char_buffer *char_buffer;
-	char *tmp_buffer;
+	err_publisher *err_publisher;
 	bool silent;
 };
 
@@ -88,16 +86,6 @@ static inline void reset(git *obj) {
 	obj->silent = false;
 }
 
-static void throw_err(git *obj, int err_code, char *fmt, ...) {
-	if (!obj->handle_err)
-		return;
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(obj->tmp_buffer, TMP_BUFFER_SIZE, fmt, args);
-	va_end(args);
-	obj->handle_err(obj->err_handler_inst, err_code, obj->tmp_buffer);
-}
-
 git *git_new(logger *logger, config *config) {
 	if (!logger || !config)
 		return NULL;
@@ -105,7 +93,6 @@ git *git_new(logger *logger, config *config) {
 	obj->logger = logger;
 	obj->config = config;
 	obj->char_buffer = char_buffer_new(CHAR_BUFFER_LEN);
-	obj->tmp_buffer = malloc(TMP_BUFFER_SIZE);
 	reset(obj);
 	return obj;
 }
@@ -113,8 +100,7 @@ git *git_new(logger *logger, config *config) {
 void git_set_error_handler(git *obj, void *err_handler_inst,
 		void (*handle_err)(void *, int, const char *))
 {
-	obj->err_handler_inst = err_handler_inst;
-	obj->handle_err = handle_err;
+	obj->err_publisher = err_publisher_new(err_handler_inst, handle_err);
 }
 
 bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
@@ -272,8 +258,10 @@ static void clone(git *obj, const char *path, const char *project) {
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);
 	int result = exec(obj, path, NULL, cmd, NULL, NULL);
-	if (result)
-		throw_err(obj, result, "Failed to clone '%s'", project);
+	if (result && obj->err_publisher) {
+		err_publisher_fire(obj->err_publisher, result, "Failed to clone '%s'",
+				project);
+	}
 }
 
 static void status(git *obj, const char *path, const char *project) {
@@ -284,8 +272,10 @@ static void status(git *obj, const char *path, const char *project) {
 			print_branch_name_chg, NULL);
 	putchar('\n');
 	obj->dry_run = prev_dry_run;
-	if (result)
-		throw_err(obj, result, "Failed to retrieve status of '%s'", project);
+	if (result && obj->err_publisher) {
+		err_publisher_fire(obj->err_publisher, result,
+				"Failed to retrieve status of '%s'", project);
+	}
 }
 
 static void list(git *obj, const char *path, const char *project) {
@@ -335,6 +325,5 @@ bool git_is_silent(git *obj) {
 
 void git_destroy(git *obj) {
 	char_buffer_destroy(obj->char_buffer);
-	free(obj->tmp_buffer);
 	free(obj);
 }

@@ -30,7 +30,8 @@ err_publisher *err_publisher_new(void *err_handler_inst,
 	return obj;
 }
 
-void throw_err(err_publisher *obj, int err_code, const char *fmt, ...) {
+void err_publisher_fire(err_publisher *obj, int err_code, const char *fmt, ...)
+{
 	if (!obj->handle_err)
 		return;
 	va_list args;

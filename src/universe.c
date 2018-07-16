@@ -113,7 +113,7 @@ static void parse_file(universe *obj, const char *file_name) {
 	int c;
 	FILE *infile = fopen(file_name, "r");
 	if (!infile) {
-		throw_err(obj->err_publisher, 0, "File not found: %s", file_name);
+		err_publisher_fire(obj->err_publisher, 0, "File not found: %s", file_name);
 		return;
 	}
 	/* Process the file */
@@ -122,7 +122,7 @@ static void parse_file(universe *obj, const char *file_name) {
 		err_msg = dparser_proc_char(obj->parser, c);
 	fclose(infile);
 	if (err_msg)
-		throw_err(obj->err_publisher, 0, err_msg);
+		err_publisher_fire(obj->err_publisher, 0, err_msg);
 }
 
 /**

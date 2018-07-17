@@ -240,7 +240,7 @@ static void checkout(git *obj, const char *path, const char *project,
 	print_action(obj, "Checking out", project);
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
-	exec(obj, path, project, cmd, print_branch_name_chg, NULL);
+	exec(obj, path, project, cmd, NULL, print_branch_name_chg);
 	putchar('\n');
 }
 

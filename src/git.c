@@ -19,6 +19,7 @@
 #include "cmdline.h"
 #include "errpublisher.h"
 #include "logger.h"
+#include "decorations.h"
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192
@@ -199,6 +200,9 @@ static void print_branch_name(git *obj) {
 	struct char_buffer *buff = obj->char_buffer;
 	char_buffer_reset(buff);
 	putchar('{');
+	bool colour = config_is_colour(obj->config);
+	if (colour)
+		printf(ANSI_COLOR_CYAN);
 	if (!xsystem(CMD_CURR_BRANCH " 2>&1", buff, false)) {
 		/* Trim the LF */
 		buff->limit--;
@@ -206,6 +210,8 @@ static void print_branch_name(git *obj) {
 	} else {
 		printf("???");
 	}
+	if (colour)
+		printf(ANSI_COLOR_RESET);
 	putchar('}');
 }
 
@@ -218,14 +224,26 @@ static void print_branch_name_chg(git *obj) {
 	struct char_buffer *buff = obj->char_buffer;
 	char_buffer_reset(buff);
 	int result = xsystem(CMD_STATUS " 2>&1", buff, false);
-	if (!result && buff->limit - buff->position > 0)
-		printf(" Found changes!");
+	if (!result && buff->limit - buff->position > 0) {
+		bool colour = config_is_colour(obj->config);
+		if (colour)
+			printf(ANSI_COLOR_RED);
+		printf(" Changed!");
+		if (colour)
+			printf(ANSI_COLOR_RESET);
+	}
 	if (config_is_verbose(obj->config))
 		putchar('\n');
 }
 
 static void print_action(git *obj, const char *action, const char *project) {
-	printf(" · %s %s ", action, project);
+	printf(" · %s ", action);
+	bool color = config_is_colour(obj->config);
+	if (color)
+		printf(ANSI_COLOR_YELLOW);
+	printf("%s ", project);
+	if (color)
+		printf(ANSI_COLOR_RESET);
 }
 
 static void pull(git *obj, const char *path, const char *project) {

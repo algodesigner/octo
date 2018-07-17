@@ -69,7 +69,7 @@ char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 		} else if (!strcmp(argv[i], "--verbose")) {
 			obj->verbose = true;
 			mark_opt_limit(obj, i);
-		} else if (!strcmp(argv[i], "--no-colour") || !strcmp(argv[i], "--no-colour")) {
+		} else if (!strcmp(argv[i], "--no-colour") || !strcmp(argv[i], "--no-color")) {
 			obj->colour = false;
 			mark_opt_limit(obj, i);
 		}

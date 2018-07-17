@@ -19,12 +19,14 @@ struct config_st {
 	char *workspace_name;
 	char *def_file_name;
 	bool verbose;
+	bool colour;
 };
 
 static void reset(config *obj) {
 	obj->opt_limit = 1;
 	obj->workspace_name = obj->def_file_name = NULL;
 	obj->verbose = false;
+	obj->colour = true;
 }
 
 config *config_new() {
@@ -67,6 +69,9 @@ char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 		} else if (!strcmp(argv[i], "--verbose")) {
 			obj->verbose = true;
 			mark_opt_limit(obj, i);
+		} else if (!strcmp(argv[i], "--no-colour") || !strcmp(argv[i], "--no-colour")) {
+			obj->colour = false;
+			mark_opt_limit(obj, i);
 		}
 		if (err_msg)
 			return err_msg;
@@ -99,6 +104,10 @@ char *config_get_def_file_name(config *obj) {
 
 bool config_is_verbose(config *obj) {
 	return obj->verbose;
+}
+
+bool config_is_colour(config *obj) {
+	return obj->colour;
 }
 
 void config_destroy(config *obj) {

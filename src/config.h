@@ -18,6 +18,7 @@ int config_get_opt_limit(config *);
 char *config_get_workspace_name(config *);
 char *config_get_def_file_name(config *);
 bool config_is_verbose(config *);
+bool config_is_colour(config *);
 void config_destroy(config *);
 
 #endif /* CONFIG_H_ */

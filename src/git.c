@@ -208,8 +208,7 @@ static void print_branch_name(git *obj) {
 		buff->limit--;
 		if (colour) {
 			printf(!strncmp("master", buff->buffer + buff->position,
-				char_buffer_len(buff)) ?
-					ANSI_COLOR_CYAN : ANSI_COLOR_CYAN_BR);
+				char_buffer_len(buff)) ? ANSI_COLOR_CYAN : ANSI_COLOR_CYAN_BR);
 		}
 		char_buffer_print(buff);
 		if (colour)

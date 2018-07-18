@@ -270,8 +270,7 @@ static void push(git *obj, const char *path, const char *project) {
 
 static void clone(git *obj, const char *path, const char *project) {
 	print_action(obj, "Cloning", project);
-	if (config_is_verbose(obj->config))
-		putchar('\n');
+	putchar('\n');
 
 	char cmd[MAX_PATH];
 	snprintf(cmd, MAX_PATH, "git clone %s%s 2>&1", obj->repository, project);

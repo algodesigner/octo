@@ -206,12 +206,17 @@ static void print_branch_name(git *obj) {
 	if (!xsystem(CMD_CURR_BRANCH " 2>&1", buff, false)) {
 		/* Trim the LF */
 		buff->limit--;
+		if (colour) {
+			printf(!strncmp("master", buff->buffer + buff->position,
+				char_buffer_len(buff)) ?
+					ANSI_COLOR_CYAN : ANSI_COLOR_CYAN_BR);
+		}
 		char_buffer_print(buff);
+		if (colour)
+			printf(ANSI_COLOR_RESET);
 	} else {
 		printf("???");
 	}
-	if (colour)
-		printf(ANSI_COLOR_RESET);
 	putchar('}');
 }
 

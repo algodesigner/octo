@@ -26,6 +26,10 @@ struct char_buffer *char_buffer_new(int length) {
 	return obj;
 }
 
+int char_buffer_len(struct char_buffer *obj) {
+	return obj->limit - obj->position;
+}
+
 void char_buffer_reset(struct char_buffer *obj) {
 	obj->position = 0;
 	obj->limit = obj->capacity;

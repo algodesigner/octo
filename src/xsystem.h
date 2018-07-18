@@ -18,6 +18,7 @@ struct char_buffer {
 };
 
 struct char_buffer *char_buffer_new(int);
+int char_buffer_len(struct char_buffer *);
 void char_buffer_reset(struct char_buffer *);
 void char_buffer_print(struct char_buffer *);
 void char_buffer_destroy(struct char_buffer *);

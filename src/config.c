@@ -60,7 +60,7 @@ char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 	reset(obj);
 	for (int i = 1; i < argc && is_opt(argv[i]); i++) {
 		char *err_msg = NULL;
-		if (equal_opts(argv[i], "--workspace")) {
+		if (equal_opts(argv[i], "--workspace") || equal_opts(argv[i], "-w")) {
 			err_msg = parse_workspace_name(obj, argv[i]);
 			mark_opt_limit(obj, i);
 		} else if (equal_opts(argv[i], "--def")) {
@@ -69,7 +69,8 @@ char *config_parse_cmd_line(config *obj, int argc, char *argv[]) {
 		} else if (!strcmp(argv[i], "--verbose")) {
 			obj->verbose = true;
 			mark_opt_limit(obj, i);
-		} else if (!strcmp(argv[i], "--no-colour") || !strcmp(argv[i], "--no-color")) {
+		} else if (!strcmp(argv[i], "--no-colour")
+				|| !strcmp(argv[i], "--no-color")) {
 			obj->colour = false;
 			mark_opt_limit(obj, i);
 		}

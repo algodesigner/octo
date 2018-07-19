@@ -17,14 +17,10 @@ bool is_opt(const char *s) {
 bool equal_opts(char *arg, char *o) {
 	if (!is_opt(arg))
 		return false;
-	/*
-	 * The option name contained in the argument can end with '=' in case
-	 * of assignment.
-	 */
-	for (; *arg && o && *arg != '='; arg++, o++)
-		if (*arg != *o)
-			return false;
-	return true;
+	/* The option name contained in the argument can end with '=' in case
+	 * of assignment. */
+	for (; *arg && *o && *arg != '=' && *arg == *o; arg++, o++);
+	return *arg == *o || !*o;
 }
 
 int get_opt(char *opt, int argc, char *argv[]) {

@@ -26,6 +26,11 @@ void workspace_add_dir(workspace *, const char *);
 void workspace_accept(workspace *, void *,
 		void (*)(void *, const char *, const char *, const char *));
 
+/*
+ * Returns the path to this workspace.
+ */
+const char *workpace_get_path(workspace *);
+
 /**
  * Releases the resources claimed by the workspace and destroys it.
  */

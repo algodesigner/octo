@@ -13,13 +13,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include "git.h"
 #include "utils.h"
 #include "xsystem.h"
 #include "cmdline.h"
 #include "errpublisher.h"
 #include "logger.h"
 #include "decorations.h"
+#include "proc.h"
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192
@@ -31,14 +31,17 @@ static const char *INVALID_ARGUMENTS = "Invalid argument(s) in command line";
 static const char *UNKNOWN_BRANCH = "Branch not specified in checkout command";
 static const char *UNKNOWN_REPOSITORY =
 		"Repository not specified in the clone command";
+static const char *UNKNOWN_VIRT_PATH = "Virtual path is not specified";
 static const char *UNKNOWN_COMMAND = "Unknown command";
 
-struct git_st {
+struct proc_st {
 	logger *logger;
 	config *config;
 	enum action action;
+	bool repetitive;
 	char *branch;
 	char *repository;
+	char *virtual_path;
 	bool dry_run;
 	const char *error_message;
 	struct char_buffer *char_buffer;
@@ -61,13 +64,15 @@ static const char *action_to_string(enum action action) {
 		return "STATUS";
 	case LIST:
 		return "LIST";
+	case PATH:
+		return "CD";
 	default:
 		return "UNKNOWN";
 	}
 }
 #endif
 
-bool git_is_installed() {
+bool proc_is_git_installed() {
 	bool result;
 	struct char_buffer *char_buffer = char_buffer_new(128);
 	result = !xsystem("git version 2>&1", char_buffer, false);
@@ -78,19 +83,21 @@ bool git_is_installed() {
 /*
  * Resets the soft state of this object.
  */
-static inline void reset(git *obj) {
+static inline void reset(proc *obj) {
 	obj->action = UNKNOWN;
+	obj->repetitive = true;
 	obj->branch = NULL;
 	obj->repository = NULL;
+	obj->virtual_path = NULL;
 	obj->dry_run = false;
 	obj->error_message = NULL;
 	obj->silent = false;
 }
 
-git *git_new(logger *logger, config *config) {
+proc *proc_new(logger *logger, config *config) {
 	if (!logger || !config)
 		return NULL;
-	git *obj = malloc(sizeof(struct git_st));
+	proc *obj = malloc(sizeof(struct proc_st));
 	obj->logger = logger;
 	obj->config = config;
 	obj->char_buffer = char_buffer_new(CHAR_BUFFER_LEN);
@@ -98,13 +105,13 @@ git *git_new(logger *logger, config *config) {
 	return obj;
 }
 
-void git_set_error_handler(git *obj, void *err_handler_inst,
+void proc_set_err_handler(proc *obj, void *err_handler_inst,
 		void (*handle_err)(void *, int, const char *))
 {
 	obj->err_publisher = err_publisher_new(err_handler_inst, handle_err);
 }
 
-bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
+bool proc_parse_cmd_line(proc *obj, int argc, char *argv[]) {
 	reset(obj);
 	int i = config_get_opt_limit(obj->config);
 	if (i >= argc) {
@@ -139,6 +146,14 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 		obj->action = LIST;
 		obj->silent = true;
 		i++;
+	} else if (!strcmp(argv[i], "path")) {
+		if (++i >= argc || is_opt(argv[i])) {
+			obj->error_message = UNKNOWN_VIRT_PATH;
+			return false;
+		}
+		obj->action = PATH;
+		obj->repetitive = false;
+		obj->virtual_path = argv[i++];
 	} else {
 		obj->error_message = UNKNOWN_COMMAND;
 		return false;
@@ -151,9 +166,9 @@ bool git_parse_cmd_line(git *obj, int argc, char *argv[]) {
 	return true;
 }
 
-static int exec(git *obj, const char *path, const char *project,
-		const char *command, void (*run_before)(git *),
-		void (*run_after)(git *))
+static int exec(proc *obj, const char *path, const char *project,
+		const char *command, void (*run_before)(proc *),
+		void (*run_after)(proc *))
 {
 	int result = -1;
 	char cwd[MAX_PATH];
@@ -196,7 +211,7 @@ static int exec(git *obj, const char *path, const char *project,
 /*
  * Prints out the currently checked out git branch.
  */
-static void print_branch_name(git *obj) {
+static void print_branch_name(proc *obj) {
 	struct char_buffer *buff = obj->char_buffer;
 	char_buffer_reset(buff);
 	putchar('{');
@@ -223,7 +238,7 @@ static void print_branch_name(git *obj) {
  * Prints the currently checked out branch name and report changes to
  * the branch if any.
  */
-static void print_branch_name_chg(git *obj) {
+static void print_branch_name_chg(proc *obj) {
 	print_branch_name(obj);
 	struct char_buffer *buff = obj->char_buffer;
 	char_buffer_reset(buff);
@@ -240,7 +255,7 @@ static void print_branch_name_chg(git *obj) {
 		putchar('\n');
 }
 
-static void print_action(git *obj, const char *action, const char *project) {
+static void print_action(proc *obj, const char *action, const char *project) {
 	printf(" · %s ", action);
 	bool color = config_is_colour(obj->config);
 	if (color)
@@ -250,13 +265,13 @@ static void print_action(git *obj, const char *action, const char *project) {
 		printf(ANSI_COLOR_RESET);
 }
 
-static void pull(git *obj, const char *path, const char *project) {
+static void pull(proc *obj, const char *path, const char *project) {
 	print_action(obj, "Pulling", project);
 	exec(obj, path, project, "git pull -p 2>&1", print_branch_name_chg, NULL);
 	putchar('\n');
 }
 
-static void checkout(git *obj, const char *path, const char *project,
+static void checkout(proc *obj, const char *path, const char *project,
 		const char *branch)
 {
 	print_action(obj, "Checking out", project);
@@ -266,13 +281,13 @@ static void checkout(git *obj, const char *path, const char *project,
 	putchar('\n');
 }
 
-static void push(git *obj, const char *path, const char *project) {
+static void push(proc *obj, const char *path, const char *project) {
 	print_action(obj, "Pushing", project);
 	exec(obj, path, project, "git push 2>&1", print_branch_name_chg, NULL);
 	putchar('\n');
 }
 
-static void clone(git *obj, const char *path, const char *project) {
+static void clone(proc *obj, const char *path, const char *project) {
 	print_action(obj, "Cloning", project);
 	putchar('\n');
 
@@ -285,7 +300,7 @@ static void clone(git *obj, const char *path, const char *project) {
 	}
 }
 
-static void status(git *obj, const char *path, const char *project) {
+static void status(proc *obj, const char *path, const char *project) {
 	print_action(obj, "Found", project);
 	bool prev_dry_run = obj->dry_run;
 	obj->dry_run = true;
@@ -299,11 +314,18 @@ static void status(git *obj, const char *path, const char *project) {
 	}
 }
 
-static void list(git *obj, const char *path, const char *project) {
+static void list(proc *obj, const char *path, const char *project) {
 	printf("%s%c%s\n", path, path_separator(), project);
 }
 
-void git_action(git *obj, const char *path, const char *project) {
+static void print_path(proc *obj, const char *path) {
+	puts(path);
+}
+
+void proc_action(proc *obj, const char *path, const char *project) {
+
+	if (!proc_is_repetitive(obj))
+		return;
 
 	DEBUG_LOG(obj->logger, "git_action: action='%s', path='%s', project='%s'\n",
 			action_to_string(obj->action), path, project);
@@ -332,19 +354,50 @@ void git_action(git *obj, const char *path, const char *project) {
 	}
 }
 
-enum action git_get_action(git *obj) {
+void proc_single_action(proc *obj, void *inst,
+		int (*resolve_path)(void *, const char *, char *, int))
+{
+	if (proc_is_repetitive(obj))
+		return;
+	if (!obj->virtual_path) {
+		err_publisher_fire(obj->err_publisher, 1, UNKNOWN_VIRT_PATH);
+		return;
+	}
+	if (!resolve_path)
+		return;
+	char path[MAX_PATH];
+	int len = resolve_path(inst, obj->virtual_path, path, MAX_PATH);
+	if (!len) {
+		err_publisher_fire(obj->err_publisher, 1, "Invalid virtual path '%s'",
+				obj->virtual_path);
+		return;
+	}
+	switch (obj->action) {
+	case PATH:
+		print_path(obj, path);
+		break;
+	default:
+		break;
+	}
+}
+
+enum action proc_get_action(proc *obj) {
 	return obj->action;
 }
 
-const char *git_get_error_message(git *obj) {
+bool proc_is_repetitive(proc *obj) {
+	return obj->repetitive;
+}
+
+const char *proc_get_error_message(proc *obj) {
 	return obj->error_message;
 }
 
-bool git_is_silent(git *obj) {
+bool proc_is_silent(proc *obj) {
 	return obj->silent;
 }
 
-void git_destroy(git *obj) {
+void proc_destroy(proc *obj) {
 	char_buffer_destroy(obj->char_buffer);
 	free(obj);
 }

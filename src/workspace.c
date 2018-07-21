@@ -44,6 +44,10 @@ void workspace_accept(workspace *obj, void *inst,
 	linked_hash_set_traverse(obj->projects, obj, visit_list_item);
 }
 
+const char *workpace_get_path(workspace *obj) {
+	return obj->path;
+}
+
 void workspace_destroy(workspace *obj) {
 	linked_hash_set_destroy(obj->projects);
 	free(obj);

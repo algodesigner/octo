@@ -16,6 +16,7 @@ universe *universe_new(logger *, const char *, void *,
 		void (*)(void *, int, const char *));
 void universe_accept(universe *, void *,
 		void (*)(void *, const char *, const char *, const char *));
+const char *universe_get_workspace_path(universe *, const char *);
 void universe_destroy(universe *);
 
 #endif /* UNIVERSE_H_ */

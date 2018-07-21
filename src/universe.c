@@ -66,6 +66,11 @@ void universe_accept(universe *obj, void *inst,
 	linked_list_traverse(obj->workspaces, obj, visit_workspace);
 }
 
+const char *universe_get_workspace_path(universe *obj, const char *alias) {
+	workspace *w = hash_map_get(obj->workspace_by_alias, (char *)alias);
+	return w ? workpace_get_path(w) : NULL;
+}
+
 /* Frees the memory allocated to the specified character sequence */
 static void destroy_string(void *inst, void *s) {
 	DEBUG_LOG(((universe * )inst)->logger, "Destroying string '%s'...\n",

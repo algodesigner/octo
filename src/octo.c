@@ -2,17 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include "universe.h"
-#include "git.h"
 #include "utils.h"
 #include "cmdline.h"
 #include "config.h"
+#include "proc.h"
 
-#define APP_VERSION "0.1.2b"
+#define APP_VERSION "0.1.3"
 
 struct app_context {
 	config *config;
 	logger *logger;
-	git *git;
+	proc *proc;
+	universe *universe;
 	char *last_name;
 };
 
@@ -20,8 +21,7 @@ struct app_context {
  * Visits the specified file.
  */
 static void visit(void *inst, const char *name, const char *path,
-		const char *project)
-{
+		const char *project) {
 	struct app_context *context = inst;
 	DEBUG_LOG(context->logger, "Visiting workspace: %s, %s: %s\n", name, path,
 			project);
@@ -32,11 +32,11 @@ static void visit(void *inst, const char *name, const char *path,
 		return;
 
 	/* If we have not seen this workspace before, print out its description */
-	if (!git_is_silent(context->git) && context->last_name != name) {
+	if (!proc_is_silent(context->proc) && context->last_name != name) {
 		printf("Workspace %s (name: %s)\n", path, name);
 		context->last_name = (char *)name;
 	}
-	git_action(context->git, path, project);
+	proc_action(context->proc, path, project);
 }
 
 static void print_usage() {
@@ -48,14 +48,15 @@ static void print_usage() {
 			"    push\tPush the repositories\n"
 			"    clone\tClone the repositories\n"
 			"    status\tPrint out the repositories status\n"
-			"    list\tList the repository paths\n");
+			"    list\tList the repository paths\n"
+			"    path\tPrint the full path to repository\n");
 }
 
 /*
  * Frees up the application resources referenced by the context.
  */
 static void destroy(struct app_context *context) {
-	git_destroy(context->git);
+	proc_destroy(context->proc);
 	logger_destroy(context->logger);
 	config_destroy(context->config);
 }
@@ -70,11 +71,26 @@ static void handle_error(void *inst, int err_code, const char *err_msg) {
 	exit(EXIT_FAILURE);
 }
 
+static int resolve_path(void *inst, const char *virt_path, char *dst, int len) {
+	struct app_context *context = inst;
+	const char *sep = "/";
+	char *alias = strtok((char *)virt_path, sep);
+	if (!alias)
+		return 0;
+	char *project = strtok(NULL, sep);
+	if (!project || strtok(NULL, sep))
+		return 0;
+	const char *path = universe_get_workspace_path(context->universe, alias);
+	if (!path)
+		return 0;
+	return snprintf(dst, len, "%s%c%s", path, path_separator(), project);
+}
+
 int main(int argc, char *argv[]) {
 
 	struct app_context context;
 
-	if (!git_is_installed()) {
+	if (!proc_is_git_installed()) {
 		puts("Git is not installed!");
 		return EXIT_FAILURE;
 	}
@@ -92,34 +108,38 @@ int main(int argc, char *argv[]) {
 	/* Initialise the application context */
 	context.config = config_new();
 	context.logger = logger_create(-1, stdout);
-	context.git = git_new(context.logger, context.config);
+	context.proc = proc_new(context.logger, context.config);
 	context.last_name = NULL;
 
 	/* Assign the error handler function */
-	git_set_error_handler(context.git, &context, handle_error);
+	proc_set_err_handler(context.proc, &context, handle_error);
 
 	const char *err_msg = config_parse_cmd_line(context.config, argc, argv);
 
 	/* Parse the command line parameters */
-	if (!err_msg && git_parse_cmd_line(context.git, argc, argv)) {
+	if (!err_msg && proc_parse_cmd_line(context.proc, argc, argv)) {
 		/*
 		 * Instantiate the workspace "universe" and parse the declaration
 		 * file
 		 */
-		universe *uv = universe_new(context.logger,
+		context.universe = universe_new(context.logger,
 				config_get_def_file_name(context.config), &context,
 				handle_error);
 		/*
-		 * Visit the individual projects and perform the actions requested
-		 * in the command line
+		 * Perform a single or repetitive task (by visiting each and every
+		 * entry contained by universe)
 		 */
-		universe_accept(uv, &context, visit);
+		if (proc_is_repetitive(context.proc))
+			universe_accept(context.universe, &context, visit);
+		else
+			proc_single_action(context.proc, &context, resolve_path);
 
 		/* Release the claimed resources */
-		universe_destroy(uv);
+		universe_destroy(context.universe);
+		context.universe = NULL;
 
 	} else {
-		err_msg = git_get_error_message(context.git);
+		err_msg = proc_get_error_message(context.proc);
 	}
 
 	/* If there is an error, pass it to the error handler */

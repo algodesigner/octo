@@ -65,7 +65,7 @@ static const char *action_to_string(enum action action) {
 	case LIST:
 		return "LIST";
 	case PATH:
-		return "CD";
+		return "PATH";
 	default:
 		return "UNKNOWN";
 	}

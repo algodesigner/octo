@@ -7,7 +7,7 @@
 #include "config.h"
 #include "proc.h"
 
-#define APP_VERSION "0.1.3"
+#define APP_VERSION "0.1.3a"
 
 struct app_context {
 	config *config;
@@ -49,7 +49,8 @@ static void print_usage() {
 			"    clone\tClone the repositories\n"
 			"    status\tPrint out the repositories status\n"
 			"    list\tList the repository paths\n"
-			"    path\tPrint the full path to repository\n");
+			"    path\tPrint the full path to repository\n"
+			"    exec\tExecute a command\n");
 }
 
 /*

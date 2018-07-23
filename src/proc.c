@@ -23,6 +23,7 @@
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192
+#define CMD_BUFFER_LEN MAX_PATH
 
 #define CMD_CURR_BRANCH "git rev-parse --abbrev-ref HEAD"
 #define CMD_STATUS "git status --porcelain"
@@ -45,6 +46,7 @@ struct proc_st {
 	bool dry_run;
 	const char *error_message;
 	struct char_buffer *char_buffer;
+	char *cmd_buffer;
 	err_publisher *err_publisher;
 	bool silent;
 };
@@ -101,6 +103,7 @@ proc *proc_new(logger *logger, config *config) {
 	obj->logger = logger;
 	obj->config = config;
 	obj->char_buffer = char_buffer_new(CHAR_BUFFER_LEN);
+	obj->cmd_buffer = malloc(CMD_BUFFER_LEN);
 	reset(obj);
 	return obj;
 }
@@ -146,6 +149,22 @@ bool proc_parse_cmd_line(proc *obj, int argc, char *argv[]) {
 		obj->action = LIST;
 		obj->silent = true;
 		i++;
+	} else if (!strcmp(argv[i], "exec")) {
+		obj->action = EXEC;
+		if (++i >= argc) {
+			obj->error_message = INVALID_ARGUMENTS;
+			return false;
+		}
+		/* Pack the remaining arguments into the command buffer */
+		char *dst = obj->cmd_buffer;
+		char *lim = dst + CMD_BUFFER_LEN;
+		for (int j = i; j < argc; j++) {
+			char *src = argv[j];
+			for (; *src && dst < lim - 1; *dst++ = *src++);
+			*dst++ = ' ';
+		}
+		*(dst - 1) = 0;
+		i = argc;
 	} else if (!strcmp(argv[i], "path")) {
 		if (++i >= argc || is_opt(argv[i])) {
 			obj->error_message = UNKNOWN_VIRT_PATH;
@@ -190,7 +209,7 @@ static int exec(proc *obj, const char *path, const char *project,
 			/* Execute the command unless we are in the dry run or verbose
 			 * mode
 			 */
-			DEBUG_LOG(obj->logger, "exec: %s\n", command);
+			DEBUG_LOG(obj->logger, "exec: %s\n", cmd_buffer);
 			bool verbose = config_is_verbose(obj->config);
 			char_buffer_reset(obj->char_buffer);
 			if (!obj->dry_run || verbose)
@@ -318,6 +337,11 @@ static void list(proc *obj, const char *path, const char *project) {
 	printf("%s%c%s\n", path, path_separator(), project);
 }
 
+static void exec_command(proc *obj, const char *path, const char *project) {
+	printf("command: %s\n", obj->cmd_buffer);
+	exec(obj, path, project, obj->cmd_buffer, NULL, NULL);
+}
+
 static void print_path(proc *obj, const char *path) {
 	puts(path);
 }
@@ -348,6 +372,9 @@ void proc_action(proc *obj, const char *path, const char *project) {
 		break;
 	case LIST:
 		list(obj, path, project);
+		break;
+	case EXEC:
+		exec_command(obj, path, project);
 		break;
 	default:
 		break;
@@ -399,5 +426,6 @@ bool proc_is_silent(proc *obj) {
 
 void proc_destroy(proc *obj) {
 	char_buffer_destroy(obj->char_buffer);
+	free(obj->cmd_buffer);
 	free(obj);
 }

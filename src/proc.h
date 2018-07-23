@@ -15,7 +15,7 @@
 typedef struct proc_st proc;
 
 enum action {
-	UNKNOWN, PULL, PUSH, CHECKOUT, CLONE, STATUS, LIST, PATH
+	UNKNOWN, PULL, PUSH, CHECKOUT, CLONE, STATUS, LIST, EXEC, PATH
 };
 
 /*

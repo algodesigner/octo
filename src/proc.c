@@ -338,7 +338,6 @@ static void list(proc *obj, const char *path, const char *project) {
 }
 
 static void exec_command(proc *obj, const char *path, const char *project) {
-	printf("command: %s\n", obj->cmd_buffer);
 	exec(obj, path, project, obj->cmd_buffer, NULL, NULL);
 }
 

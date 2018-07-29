@@ -85,7 +85,7 @@ static void put_terminator(struct token *t) {
 	t->buffer[index] = 0;
 }
 
-static void finalise_token(dparser *obj) {
+const char *finalise_token(dparser *obj) {
 	/*
 	 * Zero-terminate the token buffer so that we can pass into various
 	 * call back functions.
@@ -147,15 +147,17 @@ static void finalise_token(dparser *obj) {
 
 	/* Print out the token for debugging purposes */
 	DEBUG_LOG(obj->logger, "Token: %s\n", obj->token.buffer);
+	return NULL;
 }
 
 const char *dparser_proc_char(dparser *obj, int c) {
+	const char *err_msg = NULL;
 	switch (c) {
 	case ' ':
 	case '\t':
 		if (obj->parsing_state == TOKEN) {
 			obj->parsing_state = IDLE;
-			finalise_token(obj);
+			err_msg = finalise_token(obj);
 		}
 		break;
 	case '#':
@@ -169,12 +171,14 @@ const char *dparser_proc_char(dparser *obj, int c) {
 		break;
 	case '\n':
 		if (obj->parsing_state == TOKEN)
-			finalise_token(obj);
+			err_msg = finalise_token(obj);
 		obj->parsing_state = IDLE;
 		break;
 	case '{':
-		if (obj->parsing_state == TOKEN)
-			finalise_token(obj);
+		if (obj->parsing_state == TOKEN) {
+			if (finalise_token(obj))
+				break;
+		}
 		switch (obj->mode) {
 		case PROJ:
 			obj->mode = PROJ_TUPLE;
@@ -190,7 +194,7 @@ const char *dparser_proc_char(dparser *obj, int c) {
 		break;
 	case '}':
 		if (obj->parsing_state == TOKEN)
-			finalise_token(obj);
+			err_msg = finalise_token(obj);
 		/* We are definitely back to CONTROL mode */
 		obj->mode = CONTROL;
 		break;
@@ -206,7 +210,7 @@ const char *dparser_proc_char(dparser *obj, int c) {
 		}
 		break;
 	}
-	return NULL;
+	return err_msg;
 }
 
 void dparser_destroy(dparser *obj) {

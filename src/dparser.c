@@ -190,6 +190,7 @@ const char *dparser_proc_char(dparser *obj, int c) {
 			DEBUG_LOG(obj->logger, "Entered W_TUPLE mode...\n");
 			break;
 		default:
+			err_msg = "Encountered a block of unknown type";
 			break;
 		}
 		break;

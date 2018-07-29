@@ -86,6 +86,7 @@ static void put_terminator(struct token *t) {
 }
 
 const char *finalise_token(dparser *obj) {
+	const char *err_msg = NULL;
 	/*
 	 * Zero-terminate the token buffer so that we can pass into various
 	 * call back functions.
@@ -125,7 +126,7 @@ const char *finalise_token(dparser *obj) {
 			obj->mode = W_POINTER;
 			DEBUG_LOG(obj->logger, "Found a workspace pointer\n");
 		} else {
-			/* TODO We have a problem... */
+			err_msg = "Missing workspace pointer";
 		}
 		break;
 	case W_POINTER:
@@ -147,7 +148,7 @@ const char *finalise_token(dparser *obj) {
 
 	/* Print out the token for debugging purposes */
 	DEBUG_LOG(obj->logger, "Token: %s\n", obj->token.buffer);
-	return NULL;
+	return err_msg;
 }
 
 const char *dparser_proc_char(dparser *obj, int c) {

@@ -27,6 +27,11 @@ static unsigned hash(char *key) {
 	return h % HASHSIZE;
 }
 
+static void inline free_map_entry(struct map_entry *me) {
+	free(me->key);
+	free(me);
+}
+
 static struct map_entry *lookup(HHASHMAP map, char *key) {
 	struct map_entry *me;
 	for (me = map->buckets[hash(key)]; me != NULL; me = me->next) {
@@ -61,15 +66,13 @@ void *hash_map_put(HHASHMAP map, char *key, void *value) {
 	unsigned h; /* Hash value */
 	if ((me = lookup(map, key)) == NULL) {
 		me = malloc(sizeof(*me));
-		/* TODO the cloned key is not garbage-collected! */
+		/* The key is garbage-collected by free_map_entry */
 		if (me == NULL || (me->key = strdup(key)) == NULL)
 			return NULL;
 		h = hash(key);
 		me->next = map->buckets[h];
 		map->buckets[h] = me;
 		map->size++;
-	} else {
-		/*        free(me->value); */
 	}
 	return me->value = value;
 }
@@ -86,7 +89,7 @@ void *hash_map_remove(HHASHMAP map, char *key) {
 				map->buckets[h] = me->next;
 			else
 				prev_me = me->next;
-			free((void *)me);
+			free_map_entry(me);
 			map->size--;
 			return key;
 		}
@@ -127,10 +130,10 @@ void hash_map_traverse(HHASHMAP map, void *inst,
 }
 
 /* Recursively removes map entries linked in a linked list */
-static void free_map_entry(struct map_entry *me) {
+static void free_map_entries(struct map_entry *me) {
 	if (me->next != NULL)
-		free_map_entry(me->next);
-	free(me);
+		free_map_entries(me->next);
+	free_map_entry(me);
 }
 
 void hash_map_clear(HHASHMAP map) {
@@ -139,7 +142,7 @@ void hash_map_clear(HHASHMAP map) {
 	for (i = 0; i < HASHSIZE; i++) {
 		me = map->buckets[i];
 		if (me != NULL)
-			free_map_entry(me);
+			free_map_entries(me);
 		map->buckets[i] = NULL;
 	}
 	map->size = 0;

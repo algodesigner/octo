@@ -85,7 +85,7 @@ static void put_terminator(struct token *t) {
 	t->buffer[index] = 0;
 }
 
-const char *finalise_token(dparser *obj) {
+static const char *finalise_token(dparser *obj) {
 	const char *err_msg = NULL;
 	/*
 	 * Zero-terminate the token buffer so that we can pass into various
@@ -153,6 +153,13 @@ const char *finalise_token(dparser *obj) {
 
 const char *dparser_proc_char(dparser *obj, int c) {
 	const char *err_msg = NULL;
+
+	if (obj->parsing_state == COMMENT) {
+		if (c == '\n')
+			obj->parsing_state = IDLE;
+		return NULL;
+	}
+
 	switch (c) {
 	case ' ':
 	case '\t':

@@ -55,7 +55,7 @@ void proc_single_action(proc *, void *,
 enum action proc_get_action(proc *);
 
 /*
- * Indicaates the if the assigned action is repetitive.
+ * Indicates the if the assigned action is repetitive.
  */
 bool proc_is_repetitive(proc *);
 

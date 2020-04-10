@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hashmap.h"
+#include "utils.h"
 
 /* Improvements I should consider:
  *   o Re-hashing

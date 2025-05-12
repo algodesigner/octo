@@ -27,6 +27,19 @@ static unsigned hash(char *key) {
 	return h % HASHSIZE;
 }
 
+/* Recursively removes map entries linked in a linked list */
+static void inline free_map_entry(struct map_entry *me) {
+    free(me->key);
+	free(me);
+}
+
+/* Recursively removes map entries linked in a linked list */
+static void free_map_entries(struct map_entry *me) {
+    if (me->next != NULL)
+        free_map_entries(me->next);
+    free_map_entry(me);
+}
+
 static struct map_entry *lookup(HHASHMAP map, char *key) {
 	struct map_entry *me;
 	for (me = map->buckets[hash(key)]; me != NULL; me = me->next) {
@@ -85,8 +98,7 @@ void *hash_map_remove(HHASHMAP map, char *key) {
 				map->buckets[h] = me->next;
 			else
 				prev_me = me->next;
-            free((void *)me->key);
-			free((void *)me);
+            free_map_entry(me);
 			map->size--;
 			return key;
 		}
@@ -124,20 +136,12 @@ void hash_map_traverse(HHASHMAP map, void *inst,
 	}
 }
 
-/* Recursively removes map entries linked in a linked list */
-static void free_map_entry(struct map_entry *me) {
-	if (me->next != NULL)
-		free_map_entry(me->next);
-    free(me->key);
-	free(me);
-}
-
 void hash_map_clear(HHASHMAP map) {
 	struct map_entry *me;
 	for (int i = 0; i < HASHSIZE; i++) {
 		me = map->buckets[i];
 		if (me != NULL)
-			free_map_entry(me);
+			free_map_entries(me);
 		map->buckets[i] = NULL;
 	}
 	map->size = 0;

@@ -84,7 +84,7 @@ static void destroy_string(void *inst, void *s) {
 static void destroy_key_value(void *inst, char *key, void *value) {
 	DEBUG_LOG(((universe * )inst)->logger, "Destroying key '%s'...\n",
 			(char * )key);
-	free(key);
+//	free(key);
 	workspace_destroy(value);
 }
 
@@ -158,9 +158,10 @@ static void add_workspace(void *inst, const char *alias, const char *path) {
 		 */
 		char *alias_copy = strdup(alias);
 		char *path_copy = strdup(path);
-		/* Register the newly allocated path copy as dynamically allocated
-		 * so that it can be garbage-collected before destruction.
+		/* Register the newly allocated alias and path copies as dynamically allocated
+		 * so that they can be garbage-collected before destruction.
 		 */
+		linked_list_add(obj->alloc_strings, alias_copy);
 		linked_list_add(obj->alloc_strings, path_copy);
 		workspace = workspace_new(alias_copy, path_copy);
 		linked_list_add(obj->workspaces, workspace);

@@ -426,6 +426,6 @@ bool proc_is_silent(proc *obj) {
 void proc_destroy(proc *obj) {
 	char_buffer_destroy(obj->char_buffer);
 	free(obj->cmd_buffer);
-	free(obj->err_publisher);
+    err_publisher_destroy(obj->err_publisher);
 	free(obj);
 }

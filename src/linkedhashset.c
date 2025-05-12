@@ -39,7 +39,7 @@ int linked_hash_set_get_size(linked_hash_set *obj) {
 }
 
 void linked_hash_set_destroy(linked_hash_set *obj) {
-	free(obj->map);
-	free(obj->list);
+	linked_list_destroy(obj->list);
+	hash_map_destroy(obj->map);
 	free(obj);
 }

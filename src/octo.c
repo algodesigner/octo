@@ -7,7 +7,7 @@
 #include "config.h"
 #include "proc.h"
 
-#define APP_VERSION "0.1.3a"
+#define APP_VERSION "0.1.3b"
 
 struct app_context {
 	config *config;

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hashmap.h"
-#include "utils.h"
 
 /* Improvements I should consider:
  *   o Re-hashing
@@ -28,11 +27,6 @@ static unsigned hash(char *key) {
 	return h % HASHSIZE;
 }
 
-static void inline free_map_entry(struct map_entry *me) {
-	free(me->key);
-	free(me);
-}
-
 static struct map_entry *lookup(HHASHMAP map, char *key) {
 	struct map_entry *me;
 	for (me = map->buckets[hash(key)]; me != NULL; me = me->next) {
@@ -50,8 +44,7 @@ HHASHMAP hash_map_create_ex(int initSize, float loadFactor) {
 	HHASHMAP map = malloc(sizeof(struct tagHHASHMAP));
 	if (!map)
 		return NULL;
-	int i;
-	for (i = 0; i < HASHSIZE; i++)
+	for (int i = 0; i < HASHSIZE; i++)
 		map->buckets[i] = NULL;
 	map->size = 0;
 	return map;
@@ -67,13 +60,15 @@ void *hash_map_put(HHASHMAP map, char *key, void *value) {
 	unsigned h; /* Hash value */
 	if ((me = lookup(map, key)) == NULL) {
 		me = malloc(sizeof(*me));
-		/* The key is garbage-collected by free_map_entry */
+		/* TODO the cloned key is not garbage-collected! */
 		if (me == NULL || (me->key = strdup(key)) == NULL)
 			return NULL;
 		h = hash(key);
 		me->next = map->buckets[h];
 		map->buckets[h] = me;
 		map->size++;
+	} else {
+		/*        free(me->value); */
 	}
 	return me->value = value;
 }
@@ -90,7 +85,8 @@ void *hash_map_remove(HHASHMAP map, char *key) {
 				map->buckets[h] = me->next;
 			else
 				prev_me = me->next;
-			free_map_entry(me);
+            free((void *)me->key);
+			free((void *)me);
 			map->size--;
 			return key;
 		}
@@ -99,13 +95,12 @@ void *hash_map_remove(HHASHMAP map, char *key) {
 }
 
 char **hash_map_get_keys(HHASHMAP map) {
-	char **keys = malloc(sizeof(char *) * map->size + 1);
+	char **keys = malloc(sizeof(char *) * (map->size + 1));
 	char **cursor = keys;
-	int i;
 	struct map_entry *me;
 	if (!keys)
 		return NULL;
-	for (i = 0; i < HASHSIZE; i++) {
+	for (int i = 0; i < HASHSIZE; i++) {
 		if (map->buckets[i] == NULL)
 			continue;
 		for (me = map->buckets[i]; me; me = me->next)
@@ -123,27 +118,26 @@ void hash_map_traverse(HHASHMAP map, void *inst,
 		void (*visit)(void *, char *, void *))
 {
 	struct map_entry *me;
-	int i;
-	for (i = 0; i < HASHSIZE; i++) {
+	for (int i = 0; i < HASHSIZE; i++) {
 		for (me = map->buckets[i]; me; me = me->next)
 			visit(inst, me->key, me->value);
 	}
 }
 
 /* Recursively removes map entries linked in a linked list */
-static void free_map_entries(struct map_entry *me) {
+static void free_map_entry(struct map_entry *me) {
 	if (me->next != NULL)
-		free_map_entries(me->next);
-	free_map_entry(me);
+		free_map_entry(me->next);
+    free(me->key);
+	free(me);
 }
 
 void hash_map_clear(HHASHMAP map) {
 	struct map_entry *me;
-	int i;
-	for (i = 0; i < HASHSIZE; i++) {
+	for (int i = 0; i < HASHSIZE; i++) {
 		me = map->buckets[i];
 		if (me != NULL)
-			free_map_entries(me);
+			free_map_entry(me);
 		map->buckets[i] = NULL;
 	}
 	map->size = 0;

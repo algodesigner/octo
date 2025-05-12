@@ -1,5 +1,5 @@
 /*
- * git.c
+ * proc.c
  * Git controller class.
  *
  *  Created on: 5 Jun. 2018
@@ -426,5 +426,6 @@ bool proc_is_silent(proc *obj) {
 void proc_destroy(proc *obj) {
 	char_buffer_destroy(obj->char_buffer);
 	free(obj->cmd_buffer);
+	free(obj->err_publisher);
 	free(obj);
 }

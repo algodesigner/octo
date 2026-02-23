@@ -1,45 +1,73 @@
 /*
- * linkedhashset.c
+ * Copyright (c) 2018-2026, Vlad Shurupov
+ * All rights reserved.
  *
- *  Created on: 21 Jun. 2018
- *      Author: vlad
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
 #include "linkedhashset.h"
+#include <stdlib.h>
 #include "hashmap.h"
 #include "linkedlist.h"
 
 struct linked_hash_set_st {
-	HHASHMAP map;
-	HLINKEDLIST list;
+    HHASHMAP map;
+    HLINKEDLIST list;
 };
 
-linked_hash_set *linked_hash_set_new() {
-	linked_hash_set *obj = malloc(sizeof(struct linked_hash_set_st));
-	obj->map = hash_map_create();
-	obj->list = linked_list_create();
-	return obj;
+linked_hash_set *linked_hash_set_new()
+{
+    linked_hash_set *obj = malloc(sizeof(struct linked_hash_set_st));
+    obj->map = hash_map_create();
+    obj->list = linked_list_create();
+    return obj;
 }
 
-void linked_hash_set_add(linked_hash_set *obj, char *s) {
-	if (hash_map_get(obj->map, s))
-		return;
-	hash_map_put(obj->map, s, s);
-	linked_list_add(obj->list, s);
+void linked_hash_set_add(linked_hash_set *obj, char *s)
+{
+    if (hash_map_get(obj->map, s))
+        return;
+    hash_map_put(obj->map, s, s);
+    linked_list_add(obj->list, s);
 }
 
 void linked_hash_set_traverse(linked_hash_set *obj, void *state,
-		void (*handle)(void *state, void *value))
+        void (*handle)(void *state, void *value))
 {
-	linked_list_traverse(obj->list, state, handle);
+    linked_list_traverse(obj->list, state, handle);
 }
 
-int linked_hash_set_get_size(linked_hash_set *obj) {
-	return hash_map_get_size(obj->map);
+int linked_hash_set_get_size(linked_hash_set *obj)
+{
+    return hash_map_get_size(obj->map);
 }
 
-void linked_hash_set_destroy(linked_hash_set *obj) {
-	linked_list_destroy(obj->list);
-	hash_map_destroy(obj->map);
-	free(obj);
+void linked_hash_set_destroy(linked_hash_set *obj)
+{
+    linked_list_destroy(obj->list);
+    hash_map_destroy(obj->map);
+    free(obj);
 }

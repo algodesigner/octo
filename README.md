@@ -12,7 +12,7 @@
 
 ## Installation
 
-`octo` requires `gcc` and a C99-compliant environment.
+`octo` requires a C99-compliant compiler (such as `gcc` or `clang`) and a standard C library.
 
 1. Clone the repository (or download the source).
 2. Navigate to the project directory.

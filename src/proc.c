@@ -376,6 +376,7 @@ static void status(proc *obj, const char *path, const char *project)
 
 static void list(proc *obj, const char *path, const char *project)
 {
+    (void)obj; /* unused parameter */
     printf("%s%c%s\n", path, path_separator(), project);
 }
 
@@ -386,6 +387,7 @@ static void exec_command(proc *obj, const char *path, const char *project)
 
 static void print_path(proc *obj, const char *path)
 {
+    (void)obj; /* unused parameter */
     puts(path);
 }
 

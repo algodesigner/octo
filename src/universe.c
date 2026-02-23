@@ -100,6 +100,7 @@ const char *universe_get_workspace_path(universe *obj, const char *alias)
 /* Frees the memory allocated to the specified character sequence */
 static void destroy_string(void *inst, void *s)
 {
+    (void)inst; /* unused when DEBUG not defined */
     DEBUG_LOG(((universe *)inst)->logger, "Destroying string '%s'...\n",
             (char *)s);
     free(s);
@@ -110,6 +111,8 @@ static void destroy_string(void *inst, void *s)
  */
 static void destroy_key_value(void *inst, char *key, void *value)
 {
+    (void)inst; /* unused when DEBUG not defined */
+    (void)key; /* key is freed by hashmap */
     DEBUG_LOG(((universe *)inst)->logger, "Destroying key '%s'...\n",
             (char *)key);
     //	free(key);

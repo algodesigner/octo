@@ -32,6 +32,7 @@
 
 static void check_construction(tester *tst)
 {
+    (void)tst;
 }
 
 void test_universe(tester *tst)

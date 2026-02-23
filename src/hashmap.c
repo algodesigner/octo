@@ -92,12 +92,14 @@ HHASHMAP hash_map_create()
 
 HHASHMAP hash_map_create_ex(int initSize, float loadFactor)
 {
+    (void)initSize; /* parameter not used, fixed bucket size */
     HHASHMAP map = malloc(sizeof(struct tagHHASHMAP));
     if (!map)
         return NULL;
     for (int i = 0; i < HASHSIZE; i++)
         map->buckets[i] = NULL;
     map->size = 0;
+    map->load_factor = loadFactor;
     return map;
 }
 

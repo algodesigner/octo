@@ -18,12 +18,24 @@
 2. Navigate to the project directory.
 3. Build the utility:
    ```bash
-   make build
+   make
    ```
+   This will create a `octo` binary in the root directory and use an `obj/` folder for intermediate build artifacts.
+
 4. (Optional) Move the resulting `octo` binary to your `PATH`:
    ```bash
    mv octo /usr/local/bin/
    ```
+
+## Testing
+
+`octo` comes with a comprehensive test suite. To run the tests:
+
+```bash
+make test
+```
+
+This will build the `test_runner` and execute all test cases.
 
 ## Configuration
 
@@ -88,6 +100,8 @@ octo [options] command [arguments]
 | `--verbose`, `-v` | Enable verbose output (shows full command execution details). |
 | `--no-colour` | Disable ANSI color output. |
 
-## Why octo?
-
 In a layered system, components are often developed in parallel. Managing them as separate Git repositories allows for cleaner boundaries and independent versioning. However, common tasks (like checking the status of all layers or pulling updates for the whole system) become tedious. `octo` automates these chores, providing the convenience of a monorepo with the flexibility of polyrepo architecture.
+
+## License
+
+`octo` is released under the FreeBSD 3-Clause License. See the [LICENSE](LICENSE) file for the full text.

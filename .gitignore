@@ -3,3 +3,4 @@ Release/
 *.o
 test_runner
 octo
+obj/

@@ -20,11 +20,11 @@
    ```bash
    make
    ```
-   This will create a `octo` binary in the root directory and use an `obj/` folder for intermediate build artifacts.
+   This will create an `octo` binary in the `bin/` directory and use a `build/` folder for intermediate build artifacts.
 
 4. (Optional) Move the resulting `octo` binary to your `PATH`:
    ```bash
-   mv octo /usr/local/bin/
+   mv bin/octo /usr/local/bin/
    ```
 
 ## Testing
@@ -35,7 +35,7 @@
 make test
 ```
 
-This will build the `test_runner` and execute all test cases.
+This will build the `test_runner` in the `bin/` directory and execute all test cases.
 
 ## Configuration
 

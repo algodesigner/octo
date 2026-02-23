@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hashmap.h"
+#include "octo/hashmap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

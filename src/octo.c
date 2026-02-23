@@ -32,11 +32,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cmdline.h"
-#include "config.h"
-#include "proc.h"
-#include "universe.h"
-#include "utils.h"
+#include "octo/cmdline.h"
+#include "octo/config.h"
+#include "octo/proc.h"
+#include "octo/universe.h"
+#include "octo/utils.h"
 
 #define APP_VERSION "0.1.3b"
 

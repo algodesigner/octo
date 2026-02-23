@@ -29,11 +29,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CMDLINETEST_H_
-#define CMDLINETEST_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include "octo/cmdlinetest.h"
+#include "octo/configtest.h"
+#include "octo/dparsertest.h"
+#include "octo/hashmaptest.h"
+#include "octo/linkedhashsettest.h"
+#include "octo/linkedlisttest.h"
+#include "octo/proctest.h"
+#include "octo/tester.h"
+#include "octo/universetest.h"
+#include "octo/workspacetest.h"
 
-#include "tester.h"
-
-void test_cmdline(tester *);
-
-#endif /* CMDLINETEST_H_ */
+int main(int argn, char *args[])
+{
+    tester *tst = tester_create(true);
+    test_workspace(tst);
+    test_dparser(tst);
+    test_proc(tst);
+    test_universe(tst);
+    test_linked_list();
+    test_hash_map();
+    test_linked_hash_set(tst);
+    test_cmdline(tst);
+    test_config(tst);
+    tester_destroy(tst);
+}

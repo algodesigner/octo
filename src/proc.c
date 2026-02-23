@@ -32,7 +32,7 @@
  * Git controller class.
  */
 
-#include "proc.h"
+#include "octo/proc.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -40,12 +40,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "cmdline.h"
-#include "decorations.h"
-#include "errpublisher.h"
-#include "logger.h"
-#include "utils.h"
-#include "xsystem.h"
+#include "octo/cmdline.h"
+#include "octo/decorations.h"
+#include "octo/errpublisher.h"
+#include "octo/logger.h"
+#include "octo/utils.h"
+#include "octo/xsystem.h"
 
 #define MAX_PATH 1024
 #define CHAR_BUFFER_LEN 8192

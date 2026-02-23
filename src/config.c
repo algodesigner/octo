@@ -31,14 +31,14 @@
  * config.c
  */
 
-#include "config.h"
+#include "octo/config.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cmdline.h"
-#include "utils.h"
+#include "octo/cmdline.h"
+#include "octo/utils.h"
 
 struct config_st {
     int opt_limit;

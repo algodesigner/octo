@@ -28,18 +28,18 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "universe.h"
+#include "octo/universe.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "dconsumer.h"
-#include "dparser.h"
-#include "errpublisher.h"
-#include "hashmap.h"
-#include "linkedlist.h"
-#include "logger.h"
-#include "utils.h"
-#include "workspace.h"
+#include "octo/dconsumer.h"
+#include "octo/dparser.h"
+#include "octo/errpublisher.h"
+#include "octo/hashmap.h"
+#include "octo/linkedlist.h"
+#include "octo/logger.h"
+#include "octo/utils.h"
+#include "octo/workspace.h"
 
 struct universe_st {
     logger *logger;

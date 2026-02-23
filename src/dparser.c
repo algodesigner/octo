@@ -33,12 +33,12 @@
  * and workspace project declarations to the nominated consumer.
  */
 
-#include "dparser.h"
+#include "octo/dparser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dconsumer.h"
-#include "logger.h"
+#include "octo/dconsumer.h"
+#include "octo/logger.h"
 
 #define BUFFER_SIZE 1024
 

@@ -29,9 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "configtest.h"
+#include "octo/configtest.h"
 #include <string.h>
-#include "config.h"
+#include "octo/config.h"
 
 static void check_construction(tester *tst)
 {

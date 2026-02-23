@@ -31,10 +31,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "workspace.h"
+#include "octo/workspace.h"
 
-#include "linkedlist.h"
-#include "workspacetest.h"
+#include "octo/linkedlist.h"
+#include "octo/workspacetest.h"
 
 static const char *NAME = "w1";
 static const char *PATH = "/path/to/workspace";

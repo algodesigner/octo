@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cmdlinetest.h"
-#include "cmdline.h"
+#include "octo/cmdlinetest.h"
+#include "octo/cmdline.h"
 
 static void check_is_opt(tester *tst)
 {

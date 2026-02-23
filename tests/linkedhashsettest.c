@@ -28,10 +28,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "linkedhashsettest.h"
+#include "octo/linkedhashsettest.h"
 #include <string.h>
-#include "linkedhashset.h"
-#include "linkedlist.h"
+#include "octo/linkedhashset.h"
+#include "octo/linkedlist.h"
 
 static void check_construction(tester *tst)
 {

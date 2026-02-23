@@ -27,13 +27,22 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * universe.h
  */
 
-#ifndef UNIVERSETEST_H_
-#define UNIVERSETEST_H_
+#ifndef UNIVERSE_H_
+#define UNIVERSE_H_
 
-#include "tester.h"
+#include "octo/logger.h"
 
-void test_universe(tester *);
+typedef struct universe_st universe;
 
-#endif /* UNIVERSETEST_H_ */
+universe *universe_new(
+        logger *, const char *, void *, void (*)(void *, int, const char *));
+void universe_accept(universe *, void *,
+        void (*)(void *, const char *, const char *, const char *));
+const char *universe_get_workspace_path(universe *, const char *);
+void universe_destroy(universe *);
+
+#endif /* UNIVERSE_H_ */

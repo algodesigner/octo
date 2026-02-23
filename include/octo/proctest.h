@@ -29,11 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LOGGERTEST_H
-#define LOGGERTEST_H
+#ifndef PROCTEST_H_
+#define PROCTEST_H_
 
-#include "tester.h"
+#include "octo/tester.h"
 
-void test_workspace(tester *);
+void test_proc(tester *tst);
 
-#endif
+#endif /* PROCTEST_H_ */

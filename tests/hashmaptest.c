@@ -27,22 +27,47 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- * universe.h
  */
 
-#ifndef UNIVERSE_H_
-#define UNIVERSE_H_
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "octo/hashmap.h"
 
-#include "logger.h"
+void test_hash_map()
+{
+    HHASHMAP map = hash_map_create();
 
-typedef struct universe_st universe;
+    assert(!hash_map_get_size(map));
 
-universe *universe_new(
-        logger *, const char *, void *, void (*)(void *, int, const char *));
-void universe_accept(universe *, void *,
-        void (*)(void *, const char *, const char *, const char *));
-const char *universe_get_workspace_path(universe *, const char *);
-void universe_destroy(universe *);
+    hash_map_put(map, "elegant", "Java");
+    hash_map_put(map, "complex", "C++");
+    assert(hash_map_get_size(map) == 2);
 
-#endif /* UNIVERSE_H_ */
+    printf("elegant->%s\n", (char *)hash_map_get(map, "elegant"));
+    printf("complex->%s\n", (char *)hash_map_get(map, "complex"));
+    printf("size = %d\n", hash_map_get_size(map));
+
+    /* Test look-ups */
+    assert(!strcmp(hash_map_get(map, "elegant"), "Java"));
+    assert(!strcmp(hash_map_get(map, "complex"), "C++"));
+
+    puts("Removing one element from the map...");
+    hash_map_remove(map, "elegant");
+    assert(hash_map_get_size(map) == 1);
+    assert(hash_map_get(map, "elegant") == NULL);
+    assert(!strcmp(hash_map_get(map, "complex"), "C++"));
+
+    printf("elegant->%s\n", (char *)hash_map_get(map, "elegant"));
+    printf("complex->%s\n", (char *)hash_map_get(map, "complex"));
+    printf("size = %d\n", hash_map_get_size(map));
+
+    puts("Printing keys...");
+    char **keys = hash_map_get_keys(map);
+    char **keysp;
+    for (keysp = keys; *keysp; keysp++)
+        printf("key: %s\n", *keysp);
+    printf("Destroying the map...\n");
+    hash_map_destroy(map);
+}

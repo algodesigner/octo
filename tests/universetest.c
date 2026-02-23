@@ -28,12 +28,14 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#include "octo/universetest.h"
 
-#ifndef LINKEDHASHSETTEST_H_
-#define LINKEDHASHSETTEST_H_
+static void check_construction(tester *tst)
+{
+}
 
-#include "tester.h"
-
-void test_linked_hash_set(tester *tst);
-
-#endif /* LINKEDHASHSETTEST_H_ */
+void test_universe(tester *tst)
+{
+    tester_new_group(tst, "test_universe");
+    check_construction(tst);
+}

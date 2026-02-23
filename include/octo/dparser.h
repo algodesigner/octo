@@ -27,32 +27,20 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * A workspace definition file grammatic parser class.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "cmdlinetest.h"
-#include "configtest.h"
-#include "dparsertest.h"
-#include "hashmaptest.h"
-#include "linkedhashsettest.h"
-#include "linkedlisttest.h"
-#include "proctest.h"
-#include "tester.h"
-#include "universetest.h"
-#include "workspacetest.h"
+#ifndef DPARSER_H_
+#define DPARSER_H_
 
-int main(int argn, char *args[])
-{
-    tester *tst = tester_create(true);
-    test_workspace(tst);
-    test_dparser(tst);
-    test_proc(tst);
-    test_universe(tst);
-    test_linked_list();
-    test_hash_map();
-    test_linked_hash_set(tst);
-    test_cmdline(tst);
-    test_config(tst);
-    tester_destroy(tst);
-}
+#include "octo/dconsumer.h"
+#include "octo/logger.h"
+
+typedef struct dparser_st dparser;
+
+dparser *dpaser_new(logger *, const struct dconsumer *);
+const char *dparser_proc_char(dparser *, int);
+void dparser_destroy(dparser *);
+
+#endif /* DPARSER_H_ */

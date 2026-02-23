@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "tester.h"
+#include "octo/tester.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -28,7 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "logger.h"
+#include "octo/logger.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>

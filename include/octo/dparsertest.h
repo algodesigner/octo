@@ -29,11 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIGTEST_H_
-#define CONFIGTEST_H_
+#ifndef DPARSERTEST_H_
+#define DPARSERTEST_H_
 
-#include "tester.h"
+#include "octo/tester.h"
 
-void test_config(tester *);
+void test_dparser(tester *);
 
-#endif /* CONFIGTEST_H_ */
+#endif /* DPARSERTEST_H_ */

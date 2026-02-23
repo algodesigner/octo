@@ -30,10 +30,10 @@
  *
  * workspace.c
  */
-#include "workspace.h"
+#include "octo/workspace.h"
 #include <stddef.h>
 #include <stdlib.h>
-#include "linkedhashset.h"
+#include "octo/linkedhashset.h"
 
 struct workspace_st {
     const char *name;

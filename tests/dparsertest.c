@@ -29,10 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dparsertest.h"
-#include "dconsumer.h"
-#include "dparser.h"
-#include "logger.h"
+#include "octo/dparsertest.h"
+#include "octo/dconsumer.h"
+#include "octo/dparser.h"
+#include "octo/logger.h"
 
 /* A basic declaration stream */
 const char *D1 =

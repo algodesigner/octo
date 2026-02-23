@@ -29,45 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "hashmap.h"
+#ifndef _LINKEDLIST_H_
+#define _LINKEDLIST_H_
 
-void test_hash_map()
-{
-    HHASHMAP map = hash_map_create();
+#include "octo/classes.h"
 
-    assert(!hash_map_get_size(map));
+NEWHANDLE(HLINKEDLIST);
 
-    hash_map_put(map, "elegant", "Java");
-    hash_map_put(map, "complex", "C++");
-    assert(hash_map_get_size(map) == 2);
+/** TODO Provide comments! */
 
-    printf("elegant->%s\n", (char *)hash_map_get(map, "elegant"));
-    printf("complex->%s\n", (char *)hash_map_get(map, "complex"));
-    printf("size = %d\n", hash_map_get_size(map));
+HLINKEDLIST linked_list_create();
+void linked_list_add(HLINKEDLIST, void *);
+void *linked_list_get(HLINKEDLIST, int);
+void *linked_list_remove_first(HLINKEDLIST);
+void *linked_list_remove_last(HLINKEDLIST);
+int linked_list_get_size(HLINKEDLIST);
+HLINKEDLIST linked_list_clone(HLINKEDLIST);
+void linked_list_traverse(HLINKEDLIST, void *, void (*)(void *, void *));
+void linked_list_clear(HLINKEDLIST);
+void linked_list_destroy(HLINKEDLIST);
 
-    /* Test look-ups */
-    assert(!strcmp(hash_map_get(map, "elegant"), "Java"));
-    assert(!strcmp(hash_map_get(map, "complex"), "C++"));
-
-    puts("Removing one element from the map...");
-    hash_map_remove(map, "elegant");
-    assert(hash_map_get_size(map) == 1);
-    assert(hash_map_get(map, "elegant") == NULL);
-    assert(!strcmp(hash_map_get(map, "complex"), "C++"));
-
-    printf("elegant->%s\n", (char *)hash_map_get(map, "elegant"));
-    printf("complex->%s\n", (char *)hash_map_get(map, "complex"));
-    printf("size = %d\n", hash_map_get_size(map));
-
-    puts("Printing keys...");
-    char **keys = hash_map_get_keys(map);
-    char **keysp;
-    for (keysp = keys; *keysp; keysp++)
-        printf("key: %s\n", *keysp);
-    printf("Destroying the map...\n");
-    hash_map_destroy(map);
-}
+#endif /* _LINKEDLIST_H_ */

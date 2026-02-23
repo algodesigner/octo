@@ -28,10 +28,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "linkedhashset.h"
+#include "octo/linkedhashset.h"
 #include <stdlib.h>
-#include "hashmap.h"
-#include "linkedlist.h"
+#include "octo/hashmap.h"
+#include "octo/linkedlist.h"
 
 struct linked_hash_set_st {
     HHASHMAP map;

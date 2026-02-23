@@ -1,0 +1,93 @@
+# octo
+
+`octo` is a command-line utility designed to streamline work with multiple sibling Git repositories. Inspired by the Git "octopus merge," `octo` allows you to treat a collection of standalone repositories as a single, layered system. This is an ideal alternative to monolithic repositories (monorepos) when you need to maintain separate lifecycles for components like IPC, business logic, drivers, and utilities, while still performing uniform operations across them.
+
+## Features
+
+- **Uniform Git Operations**: Run `pull`, `push`, `status`, `checkout`, and `clone` across all repositories in a workspace with a single command.
+- **Declarative Configuration**: Define your "universe" of projects and workspaces in a simple, human-readable text file.
+- **Custom Command Execution**: Run any shell command across all repositories using `octo exec`.
+- **Workspace Isolation**: Manage different sets of repositories (workspaces) and switch between them easily.
+- **No-Bloat Architecture**: Written in C for performance and minimal dependencies.
+
+## Installation
+
+`octo` requires `gcc` and a C99-compliant environment.
+
+1. Clone the repository (or download the source).
+2. Navigate to the project directory.
+3. Build the utility:
+   ```bash
+   make build
+   ```
+4. (Optional) Move the resulting `octo` binary to your `PATH`:
+   ```bash
+   mv octo /usr/local/bin/
+   ```
+
+## Configuration
+
+`octo` looks for a workspace definition file. By default, it expects this file at `~/.octo/workspaces`, but you can specify a custom file using the `--def` flag.
+
+### The Definition File Format
+
+The definition file consists of two main sections: `projects` (default repositories) and `workspace` definitions.
+
+```text
+# This is a sample workspace definition file
+
+# Default projects to be included in workspaces
+projects {
+    utils
+    ipc
+    business
+    trading
+    analytics
+    data
+    ai
+}
+
+# Workspace definitions mapping an alias to a physical path
+workspace w1 -> /Users/vlad/Documents/work/workspace {
+    # You can add workspace-specific projects here
+}
+
+workspace w2 -> /Users/vlad/Documents/work/workspace2 {
+}
+```
+
+- **`projects { ... }`**: Lists the subdirectory names of the Git repositories you want to manage.
+- **`workspace <alias> -> <path> { ... }`**: Defines a workspace. The `<path>` is the parent directory where the projects reside. You can define additional projects inside the curly braces that are specific to that workspace.
+
+## Usage
+
+```bash
+octo [options] command [arguments]
+```
+
+### Commands
+
+| Command | Description |
+| :--- | :--- |
+| `pull` | Performs `git pull -p` in all repository directories. |
+| `push` | Performs `git push` in all repository directories. |
+| `status` | Checks `git status --porcelain` and reports any changes. |
+| `checkout <branch>` | Switches all repositories to the specified branch. |
+| `clone <url_prefix>` | Clones the repositories using the provided URL prefix (e.g., `octo clone git@github.com:myorg/`). |
+| `list` | Lists the absolute paths of all repositories in the workspace. |
+| `path <alias>/<project>` | Prints the full physical path to a specific project. |
+| `exec <command>` | Executes an arbitrary shell command in each repository directory. |
+| `version` | Prints the current version of `octo`. |
+
+### Options
+
+| Option | Description |
+| :--- | :--- |
+| `--def=<file>` | Path to the workspace definition file. |
+| `--workspace=<name>`, `-w=<name>` | Target a specific workspace defined in your config. |
+| `--verbose`, `-v` | Enable verbose output (shows full command execution details). |
+| `--no-colour` | Disable ANSI color output. |
+
+## Why octo?
+
+In a layered system, components are often developed in parallel. Managing them as separate Git repositories allows for cleaner boundaries and independent versioning. However, common tasks (like checking the status of all layers or pulling updates for the whole system) become tedious. `octo` automates these chores, providing the convenience of a monorepo with the flexibility of polyrepo architecture.

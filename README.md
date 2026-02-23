@@ -100,6 +100,59 @@ octo [options] command [arguments]
 | `--verbose`, `-v` | Enable verbose output (shows full command execution details). |
 | `--no-colour` | Disable ANSI color output. |
 
+## Common Workflows
+
+`octo` is designed to handle repetitive Git tasks across many repositories. Here are some common ways to use it:
+
+### 1. Setting Up a New Workspace
+Once you have defined your projects and workspace in the definition file, you can clone all repositories at once:
+```bash
+octo clone git@github.com:myorg/
+```
+
+### 2. Global Status Check
+Quickly see which repositories have uncommitted changes or are out of sync with their remotes:
+```bash
+octo status
+
+# Check status for a specific workspace only
+octo -w=w1 status
+```
+
+### 3. Synchronising All Layers
+Bring your entire system up to date with a single command:
+```bash
+octo pull
+```
+
+### 4. Branch Management
+Switch the whole workspace to a new feature branch for coordinated development:
+```bash
+octo checkout feature/new-engine
+```
+
+### 5. Bulk Build and Cleanup
+Execute standard shell commands across all projects:
+```bash
+# Build all components
+octo exec make
+
+# Perform a deep clean in all repositories
+octo exec git clean -fdx
+```
+
+### 6. Quick Navigation
+You can use `octo path` to quickly jump to workspace roots or specific projects:
+
+```bash
+# Go to the root of workspace 'w1'
+cd `octo path w1/.`
+
+# Go to the 'utils' project in workspace 'w1'
+cd `octo path w1/utils`
+```
+
+## Why octo?
 In a layered system, components are often developed in parallel. Managing them as separate Git repositories allows for cleaner boundaries and independent versioning. However, common tasks (like checking the status of all layers or pulling updates for the whole system) become tedious. `octo` automates these chores, providing the convenience of a monorepo with the flexibility of polyrepo architecture.
 
 ## License

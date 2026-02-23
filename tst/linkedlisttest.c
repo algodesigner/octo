@@ -37,6 +37,7 @@
 
 inline static void print_element(void *inst, void *value)
 {
+    (void)inst;
     printf(" %s", (char *)value);
 }
 

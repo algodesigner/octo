@@ -101,6 +101,7 @@ static void destroy(struct app_context *context)
  */
 static void handle_error(void *inst, int err_code, const char *err_msg)
 {
+    (void)err_code; /* unused parameter */
     fflush(stdout);
     fprintf(stderr, "Error: %s\n", err_msg);
     destroy((struct app_context *)inst);

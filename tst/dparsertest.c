@@ -49,15 +49,23 @@ struct context {
 
 static void add_project(void *inst, const char *project)
 {
+    (void)inst;
+    (void)project;
 }
 
 static void add_workspace(void *inst, const char *alias, const char *path)
 {
+    (void)inst;
+    (void)alias;
+    (void)path;
 }
 
 static void add_workspace_project(
         void *inst, const char *alias, const char *project)
 {
+    (void)inst;
+    (void)alias;
+    (void)project;
 }
 
 static void dcosumer_init(void *inst, struct dconsumer *dconsumer)
@@ -70,6 +78,7 @@ static void dcosumer_init(void *inst, struct dconsumer *dconsumer)
 
 static void check_parse_basic_def(tester *tst)
 {
+    (void)tst;
     logger *logger = logger_create(-1, stdout);
     struct dconsumer dconsumer;
     struct context context;
@@ -87,6 +96,7 @@ static void check_parse_basic_def(tester *tst)
 
 static void check_construction(tester *tst)
 {
+    (void)tst; /* parameter used in tester_assert macro */
     logger *logger = logger_create(-1, stdout);
     struct dconsumer dconsumer;
     struct context context;

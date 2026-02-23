@@ -44,6 +44,8 @@
 
 int main(int argn, char *args[])
 {
+    (void)argn;
+    (void)args;
     tester *tst = tester_create(true);
     test_workspace(tst);
     test_dparser(tst);

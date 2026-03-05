@@ -32,6 +32,8 @@
 #ifndef HASHMAPTEST_H_
 #define HASHMAPTEST_H_
 
-void test_hash_map();
+#include "tester.h"
+
+void test_hash_map(tester *tst);
 
 #endif /* HASHMAPTEST_H_ */

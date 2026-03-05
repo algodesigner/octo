@@ -100,6 +100,7 @@ HHASHMAP hash_map_create_ex(int initSize, float loadFactor)
         map->buckets[i] = NULL;
     map->size = 0;
     map->load_factor = loadFactor;
+    (void)initSize; /* parameter not used, fixed bucket size */
     return map;
 }
 
@@ -113,9 +114,9 @@ void *hash_map_put(HHASHMAP map, char *key, void *value)
 {
     struct map_entry *me;
     unsigned h; /* Hash value */
+    void *old_value = NULL;
     if ((me = lookup(map, key)) == NULL) {
         me = malloc(sizeof(*me));
-        /* TODO the cloned key is not garbage-collected! */
         if (me == NULL || (me->key = strdup(key)) == NULL)
             return NULL;
         h = hash(key);
@@ -123,12 +124,13 @@ void *hash_map_put(HHASHMAP map, char *key, void *value)
         map->buckets[h] = me;
         map->size++;
     } else {
-        /*        free(me->value); */
+        old_value = me->value;
     }
-    return me->value = value;
+    me->value = value;
+    return old_value;
 }
 
-/* I am not sure what this method should return */
+/* Returns the value associated with the removed key, or NULL if key not found */
 void *hash_map_remove(HHASHMAP map, char *key)
 {
     struct map_entry *me, *prev_me;
@@ -139,10 +141,11 @@ void *hash_map_remove(HHASHMAP map, char *key)
             if (prev_me == NULL)
                 map->buckets[h] = me->next;
             else
-                prev_me = me->next;
+                prev_me->next = me->next;
+            void *value = me->value;
             free_map_entry(me);
             map->size--;
-            return key;
+            return value;
         }
     }
     return NULL;

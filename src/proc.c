@@ -58,6 +58,61 @@ static const char *INVALID_ARGUMENTS = "Invalid argument(s) in command line";
 static const char *UNKNOWN_BRANCH = "Branch not specified in checkout command";
 static const char *UNKNOWN_REPOSITORY =
         "Repository not specified in the clone command";
+static const char *INVALID_BRANCH_NAME = "Invalid branch name";
+static const char *INVALID_PROJECT_NAME = "Invalid project name";
+
+/* Validates branch names for safe shell execution */
+static bool is_valid_branch_name(const char *name)
+{
+    if (!name || !*name)
+        return false;
+    
+    /* Branch names can contain: letters, digits, hyphen, underscore, slash, dot, @ */
+    for (const char *c = name; *c; c++) {
+        if (!((*c >= 'a' && *c <= 'z') ||
+              (*c >= 'A' && *c <= 'Z') ||
+              (*c >= '0' && *c <= '9') ||
+              *c == '-' || *c == '_' || *c == '/' || *c == '.' || *c == '@')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/* Validates project names for safe shell execution */
+static bool is_valid_project_name(const char *name)
+{
+    if (!name || !*name)
+        return false;
+    
+    /* Project names are more restrictive: letters, digits, hyphen, underscore */
+    for (const char *c = name; *c; c++) {
+        if (!((*c >= 'a' && *c <= 'z') ||
+              (*c >= 'A' && *c <= 'Z') ||
+              (*c >= '0' && *c <= '9') ||
+              *c == '-' || *c == '_')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/* Validates URL prefixes for safe shell execution - basic check for shell metacharacters */
+static bool is_safe_url_prefix(const char *url)
+{
+    if (!url || !*url)
+        return false;
+    
+    /* Check for dangerous shell metacharacters */
+    for (const char *c = url; *c; c++) {
+        if (*c == ';' || *c == '&' || *c == '|' || *c == '$' || *c == '`' || 
+            *c == '(' || *c == ')' || *c == '<' || *c == '>' || *c == '\\' ||
+            *c == '\'' || *c == '"' || *c == '\n' || *c == '\r' || *c == '\t') {
+            return false;
+        }
+    }
+    return true;
+}
 static const char *UNKNOWN_VIRT_PATH = "Virtual path is not specified";
 static const char *UNKNOWN_COMMAND = "Unknown command";
 
@@ -187,6 +242,8 @@ bool proc_parse_cmd_line(proc *obj, int argc, char *argv[])
             return false;
         }
         /* Pack the remaining arguments into the command buffer */
+        /* SECURITY NOTE: This allows arbitrary command execution. */
+        /* Users should be careful with untrusted input. */
         char *dst = obj->cmd_buffer;
         char *lim = dst + CMD_BUFFER_LEN;
         for (int j = i; j < argc; j++) {
@@ -331,6 +388,13 @@ static void pull(proc *obj, const char *path, const char *project)
 static void checkout(
         proc *obj, const char *path, const char *project, const char *branch)
 {
+    if (!is_valid_branch_name(branch)) {
+        if (obj->err_publisher) {
+            err_publisher_fire(obj->err_publisher, -1, INVALID_BRANCH_NAME);
+        }
+        return;
+    }
+    
     print_action(obj, "Checking out", project);
     char cmd[MAX_PATH];
     snprintf(cmd, MAX_PATH, "git checkout %s 2>&1", branch);
@@ -347,6 +411,20 @@ static void push(proc *obj, const char *path, const char *project)
 
 static void clone(proc *obj, const char *path, const char *project)
 {
+    if (!is_valid_project_name(project)) {
+        if (obj->err_publisher) {
+            err_publisher_fire(obj->err_publisher, -1, INVALID_PROJECT_NAME);
+        }
+        return;
+    }
+    
+    if (!is_safe_url_prefix(obj->repository)) {
+        if (obj->err_publisher) {
+            err_publisher_fire(obj->err_publisher, -1, "Invalid repository URL");
+        }
+        return;
+    }
+    
     print_action(obj, "Cloning", project);
     putchar('\n');
 

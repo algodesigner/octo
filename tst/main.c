@@ -52,7 +52,7 @@ int main(int argn, char *args[])
     test_proc(tst);
     test_universe(tst);
     test_linked_list();
-    test_hash_map();
+    test_hash_map(tst);
     test_linked_hash_set(tst);
     test_cmdline(tst);
     test_config(tst);
